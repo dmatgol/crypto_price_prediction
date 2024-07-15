@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "crypto_price_prediction"
+version = "0.1.0"
+description = "A real-time ML system that predicts short-term crypto prices"
+authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.2.4"
+black = "^21.7b0"
+flake8 = "^3.9.2"
+mypy = "^0.910"
+pre-commit = "^2.13.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
