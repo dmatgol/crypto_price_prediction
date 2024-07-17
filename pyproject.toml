@@ -4,8 +4,16 @@ version = "0.1.0"
 description = "A real-time ML system that predicts short-term crypto prices"
 authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
 
+# Assuming 'src' contains the main package
+packages = [
+    {include = "services/trade_producer/src"}
+]
+
 [tool.poetry.dependencies]
 python = "^3.11"
+libcst = "^1.4.0"
+setuptools = "^70.3.0"
+pycln = "^2.4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
