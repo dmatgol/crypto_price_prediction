@@ -51,4 +51,4 @@ repos:
     rev: v1.10.1
     hooks:
       - id: mypy
-        args: [--no-strict-optional, --ignore-missing-imports, --config-file, pyproject.toml]
+        args: [--no-strict-optional, --ignore-missing-imports]

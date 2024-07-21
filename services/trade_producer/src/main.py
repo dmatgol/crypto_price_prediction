@@ -1,6 +1,5 @@
+from api.kraken_api import KrakenWebsocketTradeAPI
 from quixstreams import Application
-
-from services.trade_producer.src.api.kraken_api import KrakenWebsocketTradeAPI
 
 
 def product_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
@@ -31,6 +30,4 @@ def product_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
 
 
 if __name__ == "__main__":
-    product_trades(
-        kakfka_broker_address="localhost:19092", kafka_topic="trades"
-    )
+    product_trades(kakfka_broker_address="redpanda:9092", kafka_topic="trades")

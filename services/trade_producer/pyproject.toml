@@ -6,7 +6,7 @@ authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
 
 # Assuming 'src' contains the main package
 packages = [
-    {include = "services/trade_producer/src"}
+    {include = "src"}
 ]
 
 [tool.poetry.dependencies]
@@ -14,7 +14,6 @@ python = "^3.11"
 libcst = "^1.4.0"
 setuptools = "^70.3.0"
 pycln = "^2.4.0"
-websocket = "^0.2.1"
 quixstreams = "^2.8.0"
 websocket-client = "^1.8.0"
 
