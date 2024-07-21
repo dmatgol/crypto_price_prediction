@@ -1,6 +1,6 @@
 import json
 
-from websocket import create_connection
+from websocket import WebSocketConnectionClosedException, create_connection
 
 
 class KrakenWebsocketTradeAPI:
@@ -16,19 +16,44 @@ class KrakenWebsocketTradeAPI:
             product_id (str): The product ID to subscribe to.
         """
         self.product_id = product_id
-        self._ws = create_connection(self.URL)
+        self._ws = self._connect()
+        self._subscribe_to_trades()
+        self._skip_initial_messages()
 
-        # Subscribe to the product's trade feed
+    def _connect(self):
+        """Create a websocket connection to the Kraken API."""
+        try:
+            ws = create_connection(self.URL)
+            print("Connection established.")
+            return ws
+        except WebSocketConnectionClosedException as e:
+            print(f"Connection error: {e}")
+            return None
+
+    def _subscribe_to_trades(self):
+        """Subscribe to the product's trade feed."""
         subscribe_message = {
             "method": "subscribe",
             "params": {
                 "channel": "trade",
                 "symbol": [self.product_id],
-                "snapshot": False,
+                "snapshot": True,
             },
         }
+        try:
+            self._ws.send(json.dumps(subscribe_message))
+            print(f"Subscribed to trades for {self.product_id}.")
+        except WebSocketConnectionClosedException as e:
+            print(f"Subscription error: {e}")
 
-        self._ws.send(json.dumps(subscribe_message))
+    def _skip_initial_messages(self) -> None:
+        """Skip first two messages from websocket.
+
+        First two messages contain no trade info, just confirmation that
+        subscription is sucessful.
+        """
+        _ = self._ws.recv()
+        _ = self._ws.recv()
 
     def get_trades(self) -> list[dict]:
         """
@@ -37,6 +62,23 @@ class KrakenWebsocketTradeAPI:
         Returns:
             list[dict]: A list of dictionaries representing the trades.
         """
-        data = self._ws.recv()
-        data = json.loads(data)
-        return data
+        message = self._ws.recv()
+
+        if "heartbeat" in message:
+            return []
+
+        message = json.loads(message)
+        trades = []
+
+        for trade in message["data"]:
+            trades.append(
+                {
+                    "product_id": self.product_id,
+                    "side": trade["side"],
+                    "price": trade["price"],
+                    "volume": trade["qty"],
+                    "timestamp": trade["timestamp"],
+                }
+            )
+
+        return trades
