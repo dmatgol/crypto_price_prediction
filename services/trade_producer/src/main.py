@@ -7,8 +7,10 @@ def produce_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
     """Read trades from Kraken websocket and send them to a Kafka topic.
 
     Args:
-        kakfka_broker_address (str): The address of Kafka broker.
-        kafka_topic (str): The name of the Kafka topic.
+    ----
+    kakfka_broker_address (str): The address of Kafka broker.
+    kafka_topic (str): The name of the Kafka topic.
+
     """
     app = Application(broker_address=kakfka_broker_address)
     topic = app.topic(name=kafka_topic, value_serializer="json")

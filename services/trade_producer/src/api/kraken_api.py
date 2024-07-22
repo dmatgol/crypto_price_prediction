@@ -10,11 +10,12 @@ class KrakenWebsocketTradeAPI:
     URL = "wss://ws.kraken.com/v2"
 
     def __init__(self, product_id: str) -> None:
-        """
-        Initialize the KrakenWebsocketTradeAPI with the provided websocket URL.
+        """Initialize the KrakenWebsocketAPI with the provided websocket URL.
 
         Args:
-            product_id (str): The product ID to subscribe to.
+        ----
+        product_id (str): The product ID to subscribe to.
+
         """
         self.product_id = product_id
         self._ws = self._connect()
@@ -57,10 +58,10 @@ class KrakenWebsocketTradeAPI:
         _ = self._ws.recv()
 
     def get_trades(self) -> list[dict]:
-        """
-        Read trades from the Kraken websocket and return a list of dicts.
+        """Read trades from the Kraken websocket and return a list of dicts.
 
-        Returns:
+        Returns
+        -------
             list[dict]: A list of dictionaries representing the trades.
         """
         message = self._ws.recv()

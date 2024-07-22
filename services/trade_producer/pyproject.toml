@@ -16,9 +16,25 @@ loguru = "^0.7.2"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
 black = "^21.7b0"
-flake8 = "^3.9.2"
 mypy = "^0.910"
 pre-commit = "^2.13.0"
+ruff = "^0.5.4"
+
+
+[tool.ruff]
+line-length = 80
+select = [
+    "E",  # Pycodestyle errors
+    "F",  # Pyflakes errors
+    "D",  # pydocstyle errors for docstring checks
+    "B",  # Bugbear for finding common issues
+    "I",  # isort for import sorting
+]
+ignore = [
+    "D100",  # Ignore missing docstring in public module
+    "D104",  # Ignore missing docstring in public package
+]
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

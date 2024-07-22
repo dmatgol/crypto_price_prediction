@@ -9,7 +9,7 @@ updates:
     schedule:
       interval: "weekly"
     # Support for Poetry
-    registries: 
+    registries:
       - pip
     # Directory for pyproject.toml
     directory: "/"
