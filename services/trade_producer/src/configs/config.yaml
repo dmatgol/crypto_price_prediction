@@ -1,0 +1,6 @@
+kafka:
+  kakfka_broker_address: "redpanda:9092"
+  kafka_topic: "trades"
+
+instrument:
+  product_id: "ETH/USD"

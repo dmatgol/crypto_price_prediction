@@ -1,6 +1,6 @@
 import json
 
-from configs.logger_config import logger
+from utils.config import logger
 from websocket import WebSocketConnectionClosedException, create_connection
 
 
@@ -83,4 +83,5 @@ class KrakenWebsocketTradeAPI:
                 }
             )
 
+        return trades
         return trades
