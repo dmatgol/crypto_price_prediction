@@ -1,5 +1,6 @@
 import json
 
+from configs.logger_config import logger
 from websocket import WebSocketConnectionClosedException, create_connection
 
 
@@ -24,10 +25,10 @@ class KrakenWebsocketTradeAPI:
         """Create a websocket connection to the Kraken API."""
         try:
             ws = create_connection(self.URL)
-            print("Connection established.")
+            logger.info("Connection established.")
             return ws
         except WebSocketConnectionClosedException as e:
-            print(f"Connection error: {e}")
+            logger.error(f"Connection error: {e}")
             return None
 
     def _subscribe_to_trades(self):
@@ -42,9 +43,9 @@ class KrakenWebsocketTradeAPI:
         }
         try:
             self._ws.send(json.dumps(subscribe_message))
-            print(f"Subscribed to trades for {self.product_id}.")
+            logger.info(f"Subscribed to trades for {self.product_id}.")
         except WebSocketConnectionClosedException as e:
-            print(f"Subscription error: {e}")
+            logger.error(f"Subscription error: {e}")
 
     def _skip_initial_messages(self) -> None:
         """Skip first two messages from websocket.

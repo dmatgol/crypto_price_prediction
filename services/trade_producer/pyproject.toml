@@ -4,11 +4,6 @@ version = "0.1.0"
 description = "A real-time ML system that predicts short-term crypto prices"
 authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
 
-# Assuming 'src' contains the main package
-packages = [
-    {include = "src"}
-]
-
 [tool.poetry.dependencies]
 python = "^3.11"
 libcst = "^1.4.0"
@@ -16,6 +11,7 @@ setuptools = "^70.3.0"
 pycln = "^2.4.0"
 quixstreams = "^2.8.0"
 websocket-client = "^1.8.0"
+loguru = "^0.7.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"

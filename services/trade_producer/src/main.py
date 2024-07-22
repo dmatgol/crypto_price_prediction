@@ -1,8 +1,9 @@
 from api.kraken_api import KrakenWebsocketTradeAPI
+from configs.logger_config import logger
 from quixstreams import Application
 
 
-def product_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
+def produce_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
     """Read trades from Kraken websocket and send them to a Kafka topic.
 
     Args:
@@ -20,7 +21,7 @@ def product_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
 
             trades: list[dict] = kraken_api.get_trades()
             for trade in trades:
-
+                logger.info(trade)
                 message = topic.serialize(trade["product_id"], value=trade)
 
                 # Produce a message into the topic
@@ -30,4 +31,4 @@ def product_trades(kakfka_broker_address: str, kafka_topic: str) -> None:
 
 
 if __name__ == "__main__":
-    product_trades(kakfka_broker_address="redpanda:9092", kafka_topic="trades")
+    produce_trades(kakfka_broker_address="redpanda:9092", kafka_topic="trades")

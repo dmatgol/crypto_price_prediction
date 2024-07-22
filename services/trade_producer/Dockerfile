@@ -1,11 +1,14 @@
 # Use the official slim Python image from the Docker Hub
 FROM python:3.12-slim
 
+# stream output to console
+ENV PYTHONUNBUFFERED=1
+
 # Install curl and other necessary system dependencies
-RUN apt-get update && apt-get install -y curl
+#RUN apt-get update && apt-get install -y curl
 
 # Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN pip install poetry==1.8.2
 
 RUN export PATH="/root/.local/bin:$PATH"
 
@@ -13,13 +16,15 @@ RUN export PATH="/root/.local/bin:$PATH"
 WORKDIR /app
 
 # Copy the application code to the container
-COPY . /app
+COPY poetry.lock pyproject.toml /app/
 
 # Ensure poetry's bin directory is in PATH for all subsequent RUN instructions
 ENV PATH="/root/.local/bin:$PATH"
 
 # Install the dependencies using Poetry
 RUN poetry install
+
+COPY . /app
 
 # Command to run the application
 CMD ["poetry", "run", "python", "src/main.py"]
