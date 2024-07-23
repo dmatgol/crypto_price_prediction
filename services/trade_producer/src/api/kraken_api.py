@@ -9,15 +9,15 @@ class KrakenWebsocketTradeAPI:
 
     URL = "wss://ws.kraken.com/v2"
 
-    def __init__(self, product_id: str) -> None:
+    def __init__(self, product_ids: list[str]) -> None:
         """Initialize the KrakenWebsocketAPI with the provided websocket URL.
 
         Args:
         ----
-        product_id (str): The product ID to subscribe to.
+        product_ids: The product ID to subscribe to.
 
         """
-        self.product_id = product_id
+        self.product_ids = product_ids
         self._ws = self._connect()
         self._subscribe_to_trades()
         self._skip_initial_messages()
@@ -38,30 +38,30 @@ class KrakenWebsocketTradeAPI:
             "method": "subscribe",
             "params": {
                 "channel": "trade",
-                "symbol": [self.product_id],
+                "symbol": self.product_ids,
                 "snapshot": True,
             },
         }
         try:
             self._ws.send(json.dumps(subscribe_message))
-            logger.info(f"Subscribed to trades for {self.product_id}.")
+            logger.info(f"Subscribed to trades for {self.product_ids}.")
         except WebSocketConnectionClosedException as e:
             logger.error(f"Subscription error: {e}")
 
     def _skip_initial_messages(self) -> None:
-        """Skip first two messages from websocket.
+        """Skip first two messages of each coin pair from websocket.
 
         First two messages contain no trade info, just confirmation that
         subscription is sucessful.
         """
-        _ = self._ws.recv()
-        _ = self._ws.recv()
+        for _ in range(len(self.product_ids)):
+            _ = self._ws.recv()
+            _ = self._ws.recv()
 
     def get_trades(self) -> list[dict]:
         """Read trades from the Kraken websocket and return a list of dicts.
 
-        Returns
-        -------
+        Returns        -------
             list[dict]: A list of dictionaries representing the trades.
         """
         message = self._ws.recv()
@@ -75,7 +75,7 @@ class KrakenWebsocketTradeAPI:
         for trade in message["data"]:
             trades.append(
                 {
-                    "product_id": self.product_id,
+                    "product_id": trade["symbol"],
                     "side": trade["side"],
                     "price": trade["price"],
                     "volume": trade["qty"],

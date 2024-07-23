@@ -3,4 +3,8 @@ kafka:
   kafka_topic: "trades"
 
 instrument:
-  product_id: "ETH/USD"
+  product_ids:
+   - "ETH/USD"
+   - "BTC/USD"
+   - "LTC/USD"
+   - "XRP/USD"
