@@ -1,36 +1,25 @@
 import json
 
+from api.base import BaseExchangeWebSocket
 from utils.config import logger
-from websocket import WebSocketConnectionClosedException, create_connection
+from websocket import WebSocketConnectionClosedException
 
 
-class KrakenWebsocketTradeAPI:
+class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
     """Kraken Websocket API for trade data."""
 
     URL = "wss://ws.kraken.com/v2"
 
-    def __init__(self, product_ids: list[str]) -> None:
+    def __init__(self, product_ids: list[str], channels: list[str]) -> None:
         """Initialize the KrakenWebsocketAPI with the provided websocket URL.
 
         Args:
         ----
         product_ids: The product ID to subscribe to.
+        channels: The list of channels to subscribe to.
 
         """
-        self.product_ids = product_ids
-        self._ws = self._connect()
-        self._subscribe_to_trades()
-        self._skip_initial_messages()
-
-    def _connect(self):
-        """Create a websocket connection to the Kraken API."""
-        try:
-            ws = create_connection(self.URL)
-            logger.info("Connection established.")
-            return ws
-        except WebSocketConnectionClosedException as e:
-            logger.error(f"Connection error: {e}")
-            return None
+        super().__init__(self.URL, product_ids, channels)
 
     def _subscribe_to_trades(self):
         """Subscribe to the product's trade feed."""
@@ -83,5 +72,4 @@ class KrakenWebsocketTradeAPI:
                 }
             )
 
-        return trades
         return trades
