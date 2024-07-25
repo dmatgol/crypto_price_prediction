@@ -2,7 +2,6 @@ import json
 
 from api.base import BaseExchangeWebSocket
 from utils.config import logger
-from websocket import WebSocketConnectionClosedException
 
 
 class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
@@ -21,7 +20,18 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
         """
         super().__init__(self.URL, product_ids, channels)
 
-    def _subscribe_to_trades(self):
+    async def __aenter__(self):
+        """Initialize connection upon entering async context manager."""
+        self._ws = await self.connect()
+        await self._subscribe()
+        await self._skip_initial_messages()
+        return self
+
+    async def __aexit__(self, *exc_info):
+        """Clean up connection upon exiting async context manager."""
+        await self._ws.close()
+
+    def _create_subscribe_message(self):
         """Subscribe to the product's trade feed."""
         subscribe_message = {
             "method": "subscribe",
@@ -31,37 +41,34 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
                 "snapshot": True,
             },
         }
-        try:
-            self._ws.send(json.dumps(subscribe_message))
-            logger.info(f"Subscribed to trades for {self.product_ids}.")
-        except WebSocketConnectionClosedException as e:
-            logger.error(f"Subscription error: {e}")
+        return subscribe_message
 
-    def _skip_initial_messages(self) -> None:
+    async def _skip_initial_messages(self) -> None:
         """Skip first two messages of each coin pair from websocket.
 
         First two messages contain no trade info, just confirmation that
         subscription is sucessful.
         """
         for _ in range(len(self.product_ids)):
-            _ = self._ws.recv()
-            _ = self._ws.recv()
+            await self._ws.recv()
+            await self._ws.recv()
 
-    def get_trades(self) -> list[dict]:
+    async def get_trades(self) -> list[dict]:
         """Read trades from the Kraken websocket and return a list of dicts.
 
-        Returns        -------
-            list[dict]: A list of dictionaries representing the trades.
-        """
-        message = self._ws.recv()
+        Returns
+        -------
+        list[dict]: A list of dictionaries representing the trades.
 
+        """
+        response = await self._ws.recv()
+        message = json.loads(response)
         if "heartbeat" in message:
+            logger.info("Received heartbeat from Kraken.")
             return []
 
-        message = json.loads(message)
         trades = []
-
-        for trade in message["data"]:
+        for trade in message.get("data", []):
             trades.append(
                 {
                     "product_id": trade["symbol"],

@@ -1,5 +1,8 @@
+import json
+from typing import Any
+
 from utils.config import logger
-from websocket import create_connection
+from websocket import WebSocket, create_connection
 
 
 class BaseExchangeWebSocket:
@@ -20,27 +23,49 @@ class BaseExchangeWebSocket:
         self.url = url
         self.product_ids = product_ids
         self.channels = channels
+        self._ws: WebSocket | None = None
 
-    async def _connect(self) -> None:
+    @staticmethod
+    async def connect(url: str) -> WebSocket | None:
         """Create a websocket connection."""
         try:
             headers = {"Sec-WebSocket-Extensions": "permessage-deflate"}
-            ws = await create_connection(self.url, header=headers)
-            logger.info(f"Connection established to {self.url}.")
+            ws = await create_connection(url, header=headers)
+            logger.info(f"Connection established to {url}.")
             return ws
         except Exception as e:
             logger.error(f"Connection error: {e}")
             return None
 
-    def _subscribe(self) -> None:
-        """Subscribe to the product's trade feed."""
+    async def _subscribe(self) -> None:
+        """Subscribe to the product's channel feed."""
+        subscribe_message = self._create_subscribe_message()
+        try:
+            await self._ws.send(json.dumps(subscribe_message))
+            logger.info(
+                f"Subscribed to {self.channels} for {self.product_ids}."
+            )
+        except Exception as e:
+            logger.info(f"Subscription error: {e}")
+
+    def _create_subscribe_message(self) -> dict:
+        """Create the subscribe message."""
         raise NotImplementedError
 
-    def get_trades(self) -> list[dict]:
+    async def get_trades(self) -> list[dict]:
         """Read trades from the websocket and return a list of dicts.
 
         Returns
         -------
-            list[dict]: List of trade data.
+        list[dict]: List of trade data.
+
         """
         raise NotImplementedError
+
+    async def run(self) -> list[dict[str, Any]]:
+        """Run the WebSocket listener."""
+        while True:
+            try:
+                return await self.get_trades()
+            except Exception as e:
+                logger.error(f"Error while receiving trades: {e}")
