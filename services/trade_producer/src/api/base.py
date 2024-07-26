@@ -26,22 +26,22 @@ class BaseExchangeWebSocket:
         self._ws: WebSocket | None = None
 
     @staticmethod
-    async def connect(url: str) -> WebSocket | None:
+    def connect(url: str) -> WebSocket | None:
         """Create a websocket connection."""
         try:
             headers = {"Sec-WebSocket-Extensions": "permessage-deflate"}
-            ws = await create_connection(url, header=headers)
+            ws = create_connection(url, header=headers)
             logger.info(f"Connection established to {url}.")
             return ws
         except Exception as e:
             logger.error(f"Connection error: {e}")
             return None
 
-    async def _subscribe(self) -> None:
+    def _subscribe(self) -> None:
         """Subscribe to the product's channel feed."""
         subscribe_message = self._create_subscribe_message()
         try:
-            await self._ws.send(json.dumps(subscribe_message))
+            self._ws.send(json.dumps(subscribe_message))
             logger.info(
                 f"Subscribed to {self.channels} for {self.product_ids}."
             )
@@ -52,7 +52,7 @@ class BaseExchangeWebSocket:
         """Create the subscribe message."""
         raise NotImplementedError
 
-    async def get_trades(self) -> list[dict]:
+    def get_trades(self) -> list[dict]:
         """Read trades from the websocket and return a list of dicts.
 
         Returns
@@ -62,10 +62,11 @@ class BaseExchangeWebSocket:
         """
         raise NotImplementedError
 
-    async def run(self) -> list[dict[str, Any]]:
+    def run(self) -> list[dict[str, Any]]:
         """Run the WebSocket listener."""
         while True:
             try:
-                return await self.get_trades()
+                trades = self.get_trades()
+                return trades
             except Exception as e:
                 logger.error(f"Error while receiving trades: {e}")
