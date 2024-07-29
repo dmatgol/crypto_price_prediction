@@ -5,12 +5,12 @@ kafka:
 exchanges:
   - name: coinbase
     product_ids:
-      - "ETH/USD"
-      - "BTC/USD"
-      - "LTC/USD"
-      - "XRP/USD"
+      - "ETH-USD"
+      - "BTC-USD"
+      - "LTC-USD"
+      - "XRP-USD"
     channels:
-      - "trades"
+      - "ticker"
   - name: kraken
     product_ids:
       - "ETH/USD"

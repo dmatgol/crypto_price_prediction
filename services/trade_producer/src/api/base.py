@@ -1,8 +1,9 @@
+import asyncio
 import json
 from typing import Any
 
+import websockets
 from utils.config import logger
-from websocket import WebSocket, create_connection
 
 
 class BaseExchangeWebSocket:
@@ -23,25 +24,40 @@ class BaseExchangeWebSocket:
         self.url = url
         self.product_ids = product_ids
         self.channels = channels
-        self._ws: WebSocket | None = None
+        self._ws: websockets.WebSocketClientProtocol | None = None
 
-    @staticmethod
-    def connect(url: str) -> WebSocket | None:
+    async def __aenter__(self):
+        """Initialize connection upon entering async context manager."""
+        self._ws = await self.connect(self.url)
+        await self._subscribe()
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback) -> None:
+        """Clean up connection upon exiting async context manager."""
+        if self._ws:
+            await self._ws.close()
+
+    async def connect(
+        self, url: str
+    ) -> websockets.WebSocketClientProtocol | None:
         """Create a websocket connection."""
         try:
             headers = {"Sec-WebSocket-Extensions": "permessage-deflate"}
-            ws = create_connection(url, header=headers)
+            ws = await websockets.connect(
+                url, ping_interval=None, extra_headers=headers
+            )
             logger.info(f"Connection established to {url}.")
             return ws
         except Exception as e:
             logger.error(f"Connection error: {e}")
+            await asyncio.sleep(5)
             return None
 
-    def _subscribe(self) -> None:
+    async def _subscribe(self) -> None:
         """Subscribe to the product's channel feed."""
         subscribe_message = self._create_subscribe_message()
         try:
-            self._ws.send(json.dumps(subscribe_message))
+            await self._ws.send(json.dumps(subscribe_message))
             logger.info(
                 f"Subscribed to {self.channels} for {self.product_ids}."
             )
@@ -62,11 +78,12 @@ class BaseExchangeWebSocket:
         """
         raise NotImplementedError
 
-    def run(self) -> list[dict[str, Any]]:
+    async def run(self) -> list[dict[str, Any]]:
         """Run the WebSocket listener."""
         while True:
             try:
-                trades = self.get_trades()
+                trades = await self.get_trades()  # type: ignore
                 return trades
             except Exception as e:
                 logger.error(f"Error while receiving trades: {e}")
+                await asyncio.sleep(5)

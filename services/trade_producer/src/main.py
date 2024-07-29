@@ -1,3 +1,4 @@
+import asyncio
 from typing import Any
 
 from api.coinbase import CoinBaseWebsocketTradeAPI
@@ -23,25 +24,19 @@ def log_configuration_parameters(config: dict[str, Any]) -> None:
 def instanteate_websocket_apis() -> (
     tuple[KrakenWebsocketTradeAPI, CoinBaseWebsocketTradeAPI]
 ):
-    """Instantiate KrakenWebsocketTradeAPI and CoinBaseWebsocketTradeAPI.
-
-    Returns
-    -------
-    A tuple of KrakenWebsocketTradeAPI and CoinBaseWebsocketTradeAPI.
-
-    """
+    """Instantiate KrakenWebsocketTradeAPI and CoinBaseWebsocketTradeAPI."""
     kraken_api = KrakenWebsocketTradeAPI(
-        product_ids=config["exchanges"][0]["product_ids"],
-        channels=config["exchanges"][0]["channels"],
-    )
-    coinbase_api = CoinBaseWebsocketTradeAPI(
         product_ids=config["exchanges"][1]["product_ids"],
         channels=config["exchanges"][1]["channels"],
+    )
+    coinbase_api = CoinBaseWebsocketTradeAPI(
+        product_ids=config["exchanges"][0]["product_ids"],
+        channels=config["exchanges"][0]["channels"],
     )
     return kraken_api, coinbase_api
 
 
-def produce_trades(
+async def produce_trades(
     kakfka_broker_address: str,
     kafka_topic: str,
 ) -> None:
@@ -59,17 +54,15 @@ def produce_trades(
     kraken_api, coinbase_api = instanteate_websocket_apis()
 
     # Producer write to kafka - send message to Kafka topic
-    # tasks = [
-    #    asyncio.create_task(run_websocket(kraken_api, app, topic)),
-    #    asyncio.create_task(run_websocket(coinbase_api, app, topic)),
-    # ]
+    tasks = [
+        asyncio.create_task(run_websocket(kraken_api, app, topic)),
+        asyncio.create_task(run_websocket(coinbase_api, app, topic)),
+    ]
 
-    run_websocket(coinbase_api, app, topic)
-
-    # await asyncio.gather(*tasks)
+    await asyncio.gather(*tasks)
 
 
-def run_websocket(
+async def run_websocket(
     websocket_api: KrakenWebsocketTradeAPI | CoinBaseWebsocketTradeAPI,
     app: Application,
     topic: Any,
@@ -83,23 +76,24 @@ def run_websocket(
     topic: The Kafka topic.
 
     """
-    with app.get_producer() as producer:
-        while True:
-            trades = websocket_api.run()
-            for trade in trades:
-                logger.info(trade)
-                message = topic.serialize(trade["product_id"], value=trade)
-                producer.produce(
-                    topic.name, value=message.value, key=message.key
-                )
+    async with websocket_api:
+        with app.get_producer() as producer:
+            while True:
+                trades = await websocket_api.run()
+                for trade in trades:
+                    logger.info(trade)
+                    message = topic.serialize(trade["product_id"], value=trade)
+                    producer.produce(
+                        topic.name, value=message.value, key=message.key
+                    )
 
 
 if __name__ == "__main__":
 
     log_configuration_parameters(config=config)
-    # asyncio.run(
-    produce_trades(
-        kakfka_broker_address=config["kafka"]["kakfka_broker_address"],
-        kafka_topic=config["kafka"]["kafka_topic"],
+    asyncio.run(
+        produce_trades(
+            kakfka_broker_address=config["kafka"]["kakfka_broker_address"],
+            kafka_topic=config["kafka"]["kafka_topic"],
+        )
     )
-    # )

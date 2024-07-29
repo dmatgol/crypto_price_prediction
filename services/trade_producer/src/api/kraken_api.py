@@ -19,25 +19,23 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
 
         """
         super().__init__(self.URL, product_ids, channels)
-        self._ws = self.connect(self.URL)
-        self._subscribe()
-        self._skip_initial_messages()
 
     @property
     def name(self) -> str:
         """Return the name of the exchange."""
         return "Kraken"
 
-    # def __enter__(self):
-    #     """Initialize connection upon entering async context manager."""
-    #     self._ws = self.connect()
-    #     self._subscribe()
-    #     self._skip_initial_messages()
-    #     return self
+    async def __enter__(self):
+        """Initialize connection upon entering async context manager."""
+        self._ws = await self.connect()
+        await self._subscribe()
+        await self._skip_initial_messages()
+        return self
 
-    # async def __aexit__(self, *exc_info):
-    #     """Clean up connection upon exiting async context manager."""
-    #     await self._ws.close()
+    async def __aexit__(self, *exc_info):
+        """Clean up connection upon exiting async context manager."""
+        if self._ws:
+            await self._ws.close()
 
     def _create_subscribe_message(self):
         """Subscribe to the product's trade feed."""
@@ -51,17 +49,17 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
         }
         return subscribe_message
 
-    def _skip_initial_messages(self) -> None:
+    async def _skip_initial_messages(self) -> None:
         """Skip first two messages of each coin pair from websocket.
 
         First two messages contain no trade info, just confirmation that
         subscription is sucessful.
         """
         for _ in range(len(self.product_ids)):
-            self._ws.recv()
-            self._ws.recv()
+            await self._ws.recv()
+            await self._ws.recv()
 
-    def get_trades(self) -> list[dict]:
+    async def get_trades(self) -> list[dict]:
         """Read trades from the Kraken websocket and return a list of dicts.
 
         Returns
@@ -69,7 +67,7 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
         list[dict]: A list of dictionaries representing the trades.
 
         """
-        response = self._ws.recv()
+        response = await self._ws.recv()
         message = json.loads(response)
         if "heartbeat" in message:
             logger.info("Received heartbeat from Kraken.")
