@@ -2,9 +2,20 @@ kafka:
   kakfka_broker_address: "redpanda:9092"
   kafka_topic: "trades"
 
-instrument:
-  product_ids:
-   - "ETH/USD"
-   - "BTC/USD"
-   - "LTC/USD"
-   - "XRP/USD"
+exchanges:
+  - name: coinbase
+    product_ids:
+      - "ETH-USD"
+      - "BTC-USD"
+      - "LTC-USD"
+      - "XRP-USD"
+    channels:
+      - "ticker"
+  - name: kraken
+    product_ids:
+      - "ETH/USD"
+      - "BTC/USD"
+      - "LTC/USD"
+      - "XRP/USD"
+    channels:
+      - "trade"

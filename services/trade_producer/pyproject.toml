@@ -7,9 +7,9 @@ authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.11"
 quixstreams = "^2.8.0"
-websocket-client = "^1.8.0"
 loguru = "^0.7.2"
 pyyaml = "^6.0.1"
+websockets = "^12.0"
 
 [tool.poetry.dev-dependencies]
 types-pyyaml = "^6.0.12.20240311"

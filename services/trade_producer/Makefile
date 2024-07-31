@@ -5,7 +5,7 @@ build-no-cache:
 	docker build --no-cache -t trade-producer .
 
 run-debug: build
-	docker run --network=redpanda_network trade-producer
+	docker run --network=redpanda_network -v $(PWD)/logs:/app/logs trade-producer
 
 run-local:
 	python src/main.py

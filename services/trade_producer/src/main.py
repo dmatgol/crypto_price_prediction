@@ -1,8 +1,11 @@
+import asyncio
 from typing import Any
 
+from api.coinbase import CoinBaseWebsocketTradeAPI
 from api.kraken_api import KrakenWebsocketTradeAPI
 from quixstreams import Application
-from utils.config import config, logger
+from utils.helpers import instanteate_websocket_apis
+from utils.logging_config import config, logger
 
 
 def log_configuration_parameters(config: dict[str, Any]) -> None:
@@ -19,8 +22,9 @@ def log_configuration_parameters(config: dict[str, Any]) -> None:
     logger.info("Configuration parameters logged.")
 
 
-def produce_trades(
-    kakfka_broker_address: str, kafka_topic: str, product_ids: list[str]
+async def produce_trades(
+    kakfka_broker_address: str,
+    kafka_topic: str,
 ) -> None:
     """Read trades from Kraken websocket and send them to a Kafka topic.
 
@@ -28,34 +32,53 @@ def produce_trades(
     ----
     kakfka_broker_address: The address of Kafka broker.
     kafka_topic: The name of the Kafka topic.
-    product_ids: The product IDs to subscribe to.
 
     """
     app = Application(broker_address=kakfka_broker_address)
     topic = app.topic(name=kafka_topic, value_serializer="json")
 
-    kraken_api = KrakenWebsocketTradeAPI(product_ids=product_ids)
+    kraken_apis, coinbase_apis = instanteate_websocket_apis()
+
     # Producer write to kafka - send message to Kafka topic
-    with app.get_producer() as producer:
+    tasks = [
+        run_websocket(api, app, topic) for api in kraken_apis + coinbase_apis
+    ]
 
-        while True:
+    await asyncio.gather(*tasks)
 
-            trades: list[dict] = kraken_api.get_trades()
-            for trade in trades:
-                logger.info(trade)
-                message = topic.serialize(trade["product_id"], value=trade)
 
-                # Produce a message into the topic
-                producer.produce(
-                    topic=topic.name, value=message.value, key=message.key
-                )
+async def run_websocket(
+    websocket_api: KrakenWebsocketTradeAPI | CoinBaseWebsocketTradeAPI,
+    app: Application,
+    topic: Any,
+):
+    """Run the websocket API.
+
+    Args:
+    ----
+    websocket_api: The websocket API to run.
+    app: The Quix application.
+    topic: The Kafka topic.
+
+    """
+    async with websocket_api:
+        with app.get_producer() as producer:
+            while True:
+                trades = await websocket_api.run()
+                for trade in trades:
+                    logger.info(trade)
+                    message = topic.serialize(trade["product_id"], value=trade)
+                    producer.produce(
+                        topic.name, value=message.value, key=message.key
+                    )
 
 
 if __name__ == "__main__":
 
     log_configuration_parameters(config=config)
-    produce_trades(
-        kakfka_broker_address=config["kafka"]["kakfka_broker_address"],
-        kafka_topic=config["kafka"]["kafka_topic"],
-        product_ids=config["instrument"]["product_ids"],
+    asyncio.run(
+        produce_trades(
+            kakfka_broker_address=config["kafka"]["kakfka_broker_address"],
+            kafka_topic=config["kafka"]["kafka_topic"],
+        )
     )
