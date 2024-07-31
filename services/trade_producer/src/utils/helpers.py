@@ -22,8 +22,8 @@ def instanteate_websocket_apis() -> (
             raise ValueError("Exchange not supported.")
 
     kraken_apis = create_kraken_api(kraken_product_ids, kraken_channel)
-    create_coinbase_api(coinbase_product_ids, coinbase_channel)
-    return kraken_apis, []
+    coinbase_apis = create_coinbase_api(coinbase_product_ids, coinbase_channel)
+    return kraken_apis, coinbase_apis
 
 
 def create_kraken_api(

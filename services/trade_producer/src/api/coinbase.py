@@ -1,7 +1,6 @@
 import json
 from typing import Any
 
-import websockets
 from api.base import BaseExchangeWebSocket
 from utils.logging_config import logger
 
@@ -23,8 +22,7 @@ class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):
 
     async def __aenter__(self):
         """Initialize connection upon entering async context manager."""
-        self._ws = await self.connect()
-        await self._subscribe()
+        await self.connect()
         return self
 
     async def __aexit__(self, *exc_info):
@@ -32,19 +30,16 @@ class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):
         if self._ws:
             await self._ws.close()
 
-    async def connect(
-        self,
-        url: str | None = None,
-    ) -> websockets.WebSocketClientProtocol:
+    async def connect(self, url: str | None = None):
         """Create a websocket connection with failover support."""
         url = url or self.URL
         try:
-            return await super().connect(url)
+            await super().connect(url)
         except Exception as e:
             logger.error(f"Connection error: {e}")
             if self.FAILOVER_URL:
                 logger.info(f"Connecting to failover url: {self.FAILOVER_URL}")
-                return await super().connect(self.FAILOVER_URL)
+                await super().connect(self.FAILOVER_URL)
             else:
                 raise e
 

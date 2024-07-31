@@ -28,8 +28,7 @@ class BaseExchangeWebSocket:
 
     async def __aenter__(self):
         """Initialize connection upon entering async context manager."""
-        self._ws = await self.connect(self.url)
-        await self._subscribe()
+        await self.connect(self.url)
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback) -> None:
@@ -37,21 +36,18 @@ class BaseExchangeWebSocket:
         if self._ws:
             await self._ws.close()
 
-    async def connect(
-        self, url: str
-    ) -> websockets.WebSocketClientProtocol | None:
+    async def connect(self, url: str):
         """Create a websocket connection."""
         try:
             headers = {"Sec-WebSocket-Extensions": "permessage-deflate"}
-            ws = await websockets.connect(
+            self._ws = await websockets.connect(
                 url, ping_interval=None, extra_headers=headers
             )
             logger.info(f"Connection established to {url}.")
-            return ws
+            await self._subscribe()
         except Exception as e:
             logger.error(f"Connection error: {e}")
-            await asyncio.sleep(5)
-            return None
+            raise e
 
     async def _subscribe(self) -> None:
         """Subscribe to the product's channel feed."""

@@ -19,7 +19,7 @@ logger.add(
 
 # Add a new logger with custom configuration for file
 logger.add(
-    "file_{time:YYYY-MM-DD}.log",
+    "logs/file_{time:YYYY-MM-DD}.log",
     rotation="10 MB",
     retention="10 days",
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {name}:{function}:{line} - "

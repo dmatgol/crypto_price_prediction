@@ -27,15 +27,23 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
 
     async def __aenter__(self):
         """Initialize connection upon entering async context manager."""
-        self._ws = await self.connect(self.URL)
-        await self._subscribe()
-        await self._skip_initial_messages()
+        await self.connect(self.URL)
         return self
 
     async def __aexit__(self, *exc_info):
         """Clean up connection upon exiting async context manager."""
         if self._ws:
             await self._ws.close()
+
+    async def connect(self, url: str | None = None):
+        """Create a websocket connection with failover support."""
+        url = url or self.URL
+        try:
+            await super().connect(url)
+            await self._skip_initial_messages()
+        except Exception as e:
+            logger.error(f"Connection error: {e}")
+            raise e
 
     def _create_subscribe_message(self):
         """Subscribe to the product's trade feed."""

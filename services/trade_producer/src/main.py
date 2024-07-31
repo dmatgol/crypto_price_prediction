@@ -40,13 +40,9 @@ async def produce_trades(
     kraken_apis, coinbase_apis = instanteate_websocket_apis()
 
     # Producer write to kafka - send message to Kafka topic
-    tasks = []
-    for kraken_api in kraken_apis:
-        tasks.append(asyncio.create_task(run_websocket(kraken_api, app, topic)))
-    for coinbase_api in coinbase_apis:
-        tasks.append(
-            asyncio.create_task(run_websocket(coinbase_api, app, topic))
-        )
+    tasks = [
+        run_websocket(api, app, topic) for api in kraken_apis + coinbase_apis
+    ]
 
     await asyncio.gather(*tasks)
 
