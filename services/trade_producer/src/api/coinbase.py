@@ -3,7 +3,7 @@ from typing import Any
 
 import websockets
 from api.base import BaseExchangeWebSocket
-from utils.config import logger
+from utils.logging_config import logger
 
 
 class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):

@@ -1,7 +1,7 @@
 import json
 
 from api.base import BaseExchangeWebSocket
-from utils.config import logger
+from utils.logging_config import logger
 
 
 class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
@@ -25,9 +25,9 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
         """Return the name of the exchange."""
         return "Kraken"
 
-    async def __enter__(self):
+    async def __aenter__(self):
         """Initialize connection upon entering async context manager."""
-        self._ws = await self.connect()
+        self._ws = await self.connect(self.URL)
         await self._subscribe()
         await self._skip_initial_messages()
         return self
