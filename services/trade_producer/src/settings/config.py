@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 
 
 class Exchange:
@@ -23,7 +23,7 @@ class HighVolumeCoinPairs:
     BTC: str = "BTCUSD"
 
 
-class Paths(BaseModel):
+class Paths(BaseSettings):
     """Constants used in the program."""
 
     config: str = "src/configs/config.yaml"
