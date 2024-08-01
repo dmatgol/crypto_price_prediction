@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+
+
 class Exchange:
     """Enumeration of supported exchanges.
 
@@ -5,8 +8,8 @@ class Exchange:
     exchanges.
     """
 
-    Kraken = "kraken"
-    Coinbase = "coinbase"
+    Kraken: str = "kraken"
+    Coinbase: str = "coinbase"
 
 
 class HighVolumeCoinPairs:
@@ -16,5 +19,14 @@ class HighVolumeCoinPairs:
     high trade volume.
     """
 
-    ETH = "ETHUSD"
-    BTC = "BTCUSD"
+    ETH: str = "ETHUSD"
+    BTC: str = "BTCUSD"
+
+
+class Paths(BaseModel):
+    """Constants used in the program."""
+
+    config: str = "src/configs/config.yaml"
+
+
+paths = Paths()

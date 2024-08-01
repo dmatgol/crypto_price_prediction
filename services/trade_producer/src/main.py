@@ -4,8 +4,10 @@ from typing import Any
 from api.coinbase import CoinBaseWebsocketTradeAPI
 from api.kraken_api import KrakenWebsocketTradeAPI
 from quixstreams import Application
-from utils.helpers import instanteate_websocket_apis
-from utils.logging_config import config, logger
+from utils.logging_config import logger
+
+from utils.helpers import get_configuration_parameters  # isort:skip
+from utils.helpers import instanteate_websocket_apis  # isort:skip
 
 
 def log_configuration_parameters(config: dict[str, Any]) -> None:
@@ -22,22 +24,18 @@ def log_configuration_parameters(config: dict[str, Any]) -> None:
     logger.info("Configuration parameters logged.")
 
 
-async def produce_trades(
-    kakfka_broker_address: str,
-    kafka_topic: str,
-) -> None:
+async def produce_trades(config: dict[str, str]) -> None:
     """Read trades from Kraken websocket and send them to a Kafka topic.
 
     Args:
     ----
-    kakfka_broker_address: The address of Kafka broker.
-    kafka_topic: The name of the Kafka topic.
+    config: The configuration parameters.
 
     """
-    app = Application(broker_address=kakfka_broker_address)
-    topic = app.topic(name=kafka_topic, value_serializer="json")
+    app = Application(broker_address=config["kafka_broker_address"])
+    topic = app.topic(name=config["kafka_topic"], value_serializer="json")
 
-    kraken_apis, coinbase_apis = instanteate_websocket_apis()
+    kraken_apis, coinbase_apis = instanteate_websocket_apis(config)
 
     # Producer write to kafka - send message to Kafka topic
     tasks = [
@@ -74,11 +72,6 @@ async def run_websocket(
 
 
 if __name__ == "__main__":
-
+    config = get_configuration_parameters()
     log_configuration_parameters(config=config)
-    asyncio.run(
-        produce_trades(
-            kakfka_broker_address=config["kafka"]["kakfka_broker_address"],
-            kafka_topic=config["kafka"]["kafka_topic"],
-        )
-    )
+    asyncio.run(produce_trades(config))

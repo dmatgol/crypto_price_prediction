@@ -1,6 +1,5 @@
 import sys
 
-import yaml
 from loguru import logger
 
 # Remove the default logger
@@ -27,7 +26,3 @@ logger.add(
     level="INFO",
     colorize=False,
 )
-
-
-with open("src/configs/config.yaml") as config_file:
-    config: dict = yaml.safe_load(config_file)

@@ -1,14 +1,51 @@
+import argparse
 import re
 
+import yaml
 from api.coinbase import CoinBaseWebsocketTradeAPI
 from api.kraken_api import KrakenWebsocketTradeAPI
-from utils.config import Exchange, HighVolumeCoinPairs
-from utils.logging_config import config
+from settings.config import Exchange, HighVolumeCoinPairs, paths
 
 
-def instanteate_websocket_apis() -> (
-    tuple[KrakenWebsocketTradeAPI, CoinBaseWebsocketTradeAPI]
-):
+def load_config(config_file: str) -> dict:
+    """Load configuration file."""
+    with open(config_file) as config_file:  # type: ignore
+        return yaml.safe_load(config_file)
+
+
+def get_configuration_parameters() -> dict[str, str]:
+    """Get the configuration parameters."""
+    config = load_config(paths.config)
+    args_namespace = parse_arguments()
+    args_dict = vars(args_namespace)
+    for key, value in args_dict.items():
+        # Arg parse wont allow other arguments. No need to validate here.
+        if value is not None:
+            config[key] = value
+    return config
+
+
+def parse_arguments() -> argparse.Namespace:
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--kafka_broker_address",
+        type=str,
+        required=False,
+        help="The address of the Kafka broker.",
+    )
+    parser.add_argument(
+        "--kafka_topic",
+        type=str,
+        required=False,
+        help="The name of the Kafka topic.",
+    )
+    return parser.parse_args()
+
+
+def instanteate_websocket_apis(
+    config,
+) -> tuple[KrakenWebsocketTradeAPI, CoinBaseWebsocketTradeAPI]:
     """Instantiate KrakenWebsocketTradeAPI and CoinBaseWebsocketTradeAPI."""
     kraken_product_ids, coinbase_product_ids = [], []
     for exchange in config["exchanges"]:

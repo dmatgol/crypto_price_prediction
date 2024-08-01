@@ -1,6 +1,5 @@
-kafka:
-  kakfka_broker_address: "redpanda:9092"
-  kafka_topic: "trades"
+kafka_broker_address: "localhost:19092"  # default localhost
+kafka_topic: "trades"
 
 exchanges:
   - name: coinbase
