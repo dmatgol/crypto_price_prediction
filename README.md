@@ -20,3 +20,7 @@ docker build -t crypto_price_prediction .
 
 - Run the container
 docker run -it --rm crypto_price_prediction
+
+
+# TODO:
+- Improve configuration file validation with pydantic settings
