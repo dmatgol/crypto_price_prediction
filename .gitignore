@@ -142,3 +142,6 @@ cython_debug/
 
 # logs
 logs/
+
+# .env files
+.env

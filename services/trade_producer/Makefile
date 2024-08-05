@@ -4,8 +4,13 @@ build:
 build-no-cache:
 	docker build --no-cache -t trade-producer .
 
-run-debug: build
-	docker run --network=redpanda_network -v $(PWD)/logs:/app/logs trade-producer
+run: build
+	docker run \
+		--network=redpanda_network \
+		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
+		-e KAFKA_TOPIC=trade \
+		-v $(PWD)/logs:/app/logs \
+		trade-producer
 
 run-local:
-	python src/main.py
+	poetry run python src/main.py
