@@ -10,6 +10,7 @@ run: build
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
 		-e KAFKA_TOPIC=trade \
 		-v $(PWD)/logs:/app/logs \
+		-p 8000:8000 \
 		trade-producer
 
 run-local:

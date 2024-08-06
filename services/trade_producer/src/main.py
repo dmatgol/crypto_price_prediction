@@ -1,8 +1,10 @@
 import asyncio
+import time
 from typing import Any
 
 from api.coinbase import CoinBaseWebsocketTradeAPI
 from api.kraken_api import KrakenWebsocketTradeAPI
+from monitoring.monitoring_metrics import monitoring
 from quixstreams import Application
 from settings.config import settings
 from utils.logging_config import logger
@@ -48,7 +50,16 @@ async def run_websocket(
     async with websocket_api:
         with app.get_producer() as producer:
             while True:
+                # Monitor performance
+                start_time = time.time()
                 trades = await websocket_api.run()
+                latency = time.time() - start_time
+                monitoring.observe_request(
+                    exchange=websocket_api.name, metric=latency
+                )
+                monitoring.increment_request_count(exchange=websocket_api.name)
+
+                # Send trades to redpanda
                 for trade in trades:
                     logger.info(trade)
                     message = topic.serialize(trade["product_id"], value=trade)

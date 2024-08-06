@@ -24,3 +24,9 @@ docker run -it --rm crypto_price_prediction
 
 # TODO:
 - [x] Improve configuration file validation with pydantic settings
+- [x] Set up grafana and prometheus
+    - [x] Run prometheus and grafana locally with docker compose
+    - [x] Install prometheus python client
+    - [x] Monitor trade latency
+- [] Build a grafana dashboard
+- [] Create a docker-compose for our trade-producer
