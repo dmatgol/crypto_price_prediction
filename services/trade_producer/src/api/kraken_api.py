@@ -1,6 +1,7 @@
 import json
 
 from api.base import BaseExchangeWebSocket
+from monitoring.monitoring_metrics import monitoring
 from utils.logging_config import logger
 
 
@@ -77,8 +78,9 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
         """
         response = await self._ws.recv()
         message = json.loads(response)
-        if "heartbeat" in message:
+        if message.get("channel", []) == "heartbeat":
             logger.info("Received heartbeat from Kraken.")
+            monitoring.increment_heartbeat_count(self.name)
             return []
 
         trades = []

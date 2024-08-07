@@ -11,6 +11,7 @@ run: build
 		-e KAFKA_TOPIC=trade \
 		-v $(PWD)/logs:/app/logs \
 		-p 8000:8000 \
+		--name=trade-producer \
 		trade-producer
 
 run-local:

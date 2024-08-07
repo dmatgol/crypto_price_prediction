@@ -15,6 +15,12 @@ class MonitoringMetrics:
             "request_count", "Total number of requests", ["exchange"]
         )
 
+        self.heartbeat_responses = Counter(
+            "heartbeat_responses",
+            "Total number of heartbeat responses",
+            ["exchange"],
+        )
+
         # Start the HTTP server to expose metrics
         start_http_server(port)
 
@@ -25,6 +31,10 @@ class MonitoringMetrics:
     def increment_request_count(self, exchange: str):
         """Count the number of requests."""
         self.request_count.labels(exchange=exchange).inc()
+
+    def increment_heartbeat_count(self, exchange: str):
+        """Increment the number of heartbeat responses."""
+        self.heartbeat_responses.labels(exchange=exchange).inc()
 
 
 monitoring = MonitoringMetrics(port=8000)

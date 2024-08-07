@@ -2,6 +2,7 @@ import json
 from typing import Any
 
 from api.base import BaseExchangeWebSocket
+from monitoring.monitoring_metrics import monitoring
 from utils.logging_config import logger
 
 
@@ -66,6 +67,11 @@ class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):
         try:
             response = await self._ws.recv()
             json_response = json.loads(response)
+            if "type" in json_response and json_response["type"] == "heartbeat":
+                logger.info("Received heartbeat from Kraken.")
+                monitoring.increment_heartbeat_count(self.name)
+                return []
+
             if "type" in json_response and json_response["type"] == "ticker":
                 return [
                     {
