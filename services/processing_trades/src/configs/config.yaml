@@ -1,0 +1,10 @@
+exchanges:
+  - name: coinbase
+    product_ids:
+      - "ETH-USD"
+      - "BTC-USD"
+      - "LTC-USD"
+      - "XRP-USD"
+    channels:
+      - "ticker"
+volume_interval: 1

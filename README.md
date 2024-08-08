@@ -29,4 +29,7 @@ docker run -it --rm crypto_price_prediction
     - [x] Install prometheus python client
     - [x] Monitor trade latency
 - [] Build a grafana dashboard
-- [] Create a docker-compose for our trade-producer
+    - [] Verify fact that I spin multiple APIs depending on high/low volume currencies and
+    how that affects metrics.
+    - [] Clearly understand the values that are being shown in grafana.
+- [] Add tests
