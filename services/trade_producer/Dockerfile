@@ -38,4 +38,4 @@ WORKDIR /app
 COPY . /app
 
 # Command to run the application
-CMD [ "python", "src/main.py", "--kafka_broker_address=redpanda:9092", "--kafka_topic=trades" ]
+CMD [ "python", "src/main.py"]

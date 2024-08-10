@@ -28,7 +28,7 @@ class KafkaSettings(BaseSettings):
     kafka_output_topic: str
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="__"
+        env_file="services/processing_trades/.env", env_nested_delimiter="__"
     )
 
 
@@ -56,10 +56,10 @@ class Settings(BaseSettings):
 
     kafka: KafkaSettings = KafkaSettings()
     exchanges: list[Exchange]
-    volume_interval: int
+    volume_interval: float
 
     model_config = SettingsConfigDict(
-        yaml_file="src/configs/config.yaml",
+        yaml_file="services/processing_trades/src/configs/config.yaml",
     )
 
     @classmethod
