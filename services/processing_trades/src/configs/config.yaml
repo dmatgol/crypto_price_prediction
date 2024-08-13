@@ -7,4 +7,4 @@ exchanges:
       - "XRP-USD"
     channels:
       - "ticker"
-volume_interval: 1
+volume_interval: 10
