@@ -8,7 +8,7 @@ run: build
 	docker run \
 		--network=redpanda_network \
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
-		-e KAFKA_TOPIC=trade \
+		-e KAFKA_TOPIC=trades \
 		-v $(PWD)/logs:/app/logs \
 		-p 8000:8000 \
 		--name=trade-producer \

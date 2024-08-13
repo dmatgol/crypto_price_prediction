@@ -68,7 +68,7 @@ class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):
             response = await self._ws.recv()
             json_response = json.loads(response)
             if "type" in json_response and json_response["type"] == "heartbeat":
-                logger.info("Received heartbeat from Kraken.")
+                logger.info("Received heartbeat from Coinbase.")
                 monitoring.increment_heartbeat_count(self.name)
                 return []
 
@@ -77,8 +77,8 @@ class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):
                     {
                         "product_id": json_response["product_id"],
                         "side": json_response["side"],
-                        "price": json_response["price"],
-                        "volume": json_response["last_size"],
+                        "price": float(json_response["price"]),
+                        "volume": float(json_response["last_size"]),
                         "timestamp": json_response["time"],
                         "exchange": self.name,
                     }
