@@ -1,10 +1,22 @@
 exchanges:
   - name: coinbase
-    product_ids:
-      - "ETH-USD"
-      - "BTC-USD"
-      - "LTC-USD"
-      - "XRP-USD"
     channels:
-      - "ticker"
-volume_interval: 0.3
+      - ticker
+
+product_ids:
+  - coin: "ETH-USD"
+    aggregation:
+      type: "volume"
+      interval: 1
+  - coin: "BTC-USD"
+    aggregation:
+      type: "volume"
+      interval: 1
+  - coin: "LTC-USD"
+    aggregation:
+      type: "volume"
+      interval: 100
+  - coin: "XRP-USD"
+    aggregation:
+      type: "volume"
+      interval: 10000

@@ -1,10 +1,21 @@
 from typing import Any
 
 from finance_data_structures.base import FinanceDataStructure
+from settings.config import PRODUCT_ID_MAPPING, ProductId
 
 
 class VolumeBars(FinanceDataStructure):
     """Volume bars data structure."""
+
+    def __init__(
+        self, output_producer: Any, output_topic: Any, products: list[ProductId]
+    ) -> None:
+        """Initialize the volume-based financial data structure."""
+        super().__init__(output_producer, output_topic)
+        self.threshold_intervals = {
+            PRODUCT_ID_MAPPING.get(product.coin): product.aggregation.interval
+            for product in products
+        }
 
     def initialize_bar(self, price: float, timestamp: int) -> dict[str, Any]:
         """Initialize the data structure."""
@@ -26,7 +37,7 @@ class VolumeBars(FinanceDataStructure):
         trade (dict[str, Any]): trade object.
 
         """
-        product_id = trade["product_id"]
+        product_id = PRODUCT_ID_MAPPING.get(trade["product_id"])
         price = trade["price"]
         volume = trade["volume"]
         timestamp = trade["timestamp"]
@@ -42,10 +53,12 @@ class VolumeBars(FinanceDataStructure):
             bar["close"] = price
             bar["end_time"] = timestamp
 
-            remaining_volume = self.threshold_interval - bar["volume"]
+            remaining_volume = (
+                self.threshold_intervals[product_id] - bar["volume"]
+            )
 
             if self.is_bar_complete(volume, remaining_volume):
-                bar["volume"] = self.threshold_interval
+                bar["volume"] = self.threshold_intervals[product_id]
                 volume -= remaining_volume
                 self.write_bar_to_topic(product_id, bar)
                 self.bars[product_id] = self.initialize_bar(price, timestamp)

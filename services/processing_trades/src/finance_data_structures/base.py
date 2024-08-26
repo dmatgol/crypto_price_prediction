@@ -9,7 +9,9 @@ class FinanceDataStructure:
     """Finance data structure base class."""
 
     def __init__(
-        self, output_producer: Any, ouput_topic: Any, threshold_interval: float
+        self,
+        output_producer: Any,
+        ouput_topic: Any,
     ) -> None:
         """Initialize generic financial data structure.
 
@@ -22,7 +24,6 @@ class FinanceDataStructure:
         """
         self.output_producer = output_producer
         self.output_topic = ouput_topic
-        self.threshold_interval = threshold_interval
         self.bars: defaultdict[Any, Any] = defaultdict(
             lambda: self.initialize_bar(None, None)
         )

@@ -35,9 +35,7 @@ class Preprocessing:
 
         with app.get_producer() as producer:
             volume_bars = VolumeBars(
-                producer,
-                output_topic,
-                settings.volume_interval,
+                producer, output_topic, settings.product_ids
             )
             # Apply the process_trade function to each incoming message
             sdf = sdf.apply(
