@@ -3,7 +3,8 @@ import json
 from typing import Any
 
 import websockets
-from utils.logging_config import logger
+
+from services.trade_producer.src.utils.logging_config import logger
 
 
 class BaseExchangeWebSocket:

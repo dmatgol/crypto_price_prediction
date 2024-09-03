@@ -18,7 +18,7 @@ class Preprocessing:
         """Create trade bars for the defined methods."""
         # TODO: add support for run with different methods.
         # Idea is to iterate over every method and create bars for each
-        # Need to create validation for available methods.
+        # Need to create validation/tests for available methods.
         app = Application(
             broker_address=self.broker_address,
             consumer_group="trade_to_volume_bar",

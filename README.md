@@ -32,4 +32,5 @@ docker run -it --rm crypto_price_prediction
     - [] Verify fact that I spin multiple APIs depending on high/low volume currencies and
     how that affects metrics.
     - [] Clearly understand the values that are being shown in grafana.
+- [] Change processing to also add the exchange as feature
 - [] Add tests
