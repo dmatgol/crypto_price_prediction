@@ -20,7 +20,7 @@ def push_data_to_feature_store(
     """
     project = hopsworks.login(
         project=settings.hopswork.project_name,
-        api_key=settings.hopswork.api_key,
+        api_key_value=settings.hopswork.api_key,
     )
 
     fs = project.get_feature_store()
@@ -28,10 +28,15 @@ def push_data_to_feature_store(
         name=feature_group_name,
         version=feature_group_version,
         description="OHLC data coming from Kraken/Coinbase",
-        primary_key=["product_id", "timestamp"],
-        event_time="timestamp",
+        primary_key=["product_id", "unique_id"],
+        event_time="end_time",
         online_enabled=True,
     )
 
-    data = pd.DataFrame([data])
-    ohlc_feature_group.insert(data)
+    df = pd.DataFrame([data])
+    df = df.assign(
+        start_time=pd.to_datetime(data["start_time"]),
+        end_time=pd.to_datetime(data["end_time"]),
+    )
+
+    ohlc_feature_group.insert(df)

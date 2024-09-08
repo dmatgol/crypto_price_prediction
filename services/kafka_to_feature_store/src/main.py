@@ -29,11 +29,13 @@ class PublishToFeatureStore:
         """
         app = Application(
             broker_address=self.broker_address,
-            consumer_group="kafka_to_feature_store",
+            consumer_group="kafka_to_hopswork_feature_store",
+            auto_offset_reset="earliest",
         )
+        input_topic = app.topic(name=self.input_topic, value_serializer="json")
 
         with app.get_consumer() as consumer:
-            consumer.subscribe(topics=[self.input_topic])
+            consumer.subscribe(topics=[input_topic.name])
 
             while True:
                 msg = consumer.poll(1)
