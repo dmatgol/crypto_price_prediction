@@ -52,7 +52,7 @@ class PublishToFeatureStore:
                         data=ohlc_message,
                     )
 
-                    consumer.store_offsets(message=ohlc_message)
+                    consumer.store_offsets(message=msg)
 
 
 if __name__ == "__main__":
