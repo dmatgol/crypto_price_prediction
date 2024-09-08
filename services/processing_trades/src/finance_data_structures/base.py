@@ -25,11 +25,13 @@ class FinanceDataStructure:
         self.output_producer = output_producer
         self.output_topic = ouput_topic
         self.bars: defaultdict[Any, Any] = defaultdict(
-            lambda: self.initialize_bar(None, None)
+            lambda: self.initialize_bar(None, None, None)
         )
 
     @abstractmethod
-    def initialize_bar(self, price: float, timestamp: int) -> dict:
+    def initialize_bar(
+        self, price: float, timestamp: int, product_id: str
+    ) -> dict:
         """Initialize the data structure."""
         pass
 
