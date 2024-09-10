@@ -1,0 +1,39 @@
+name: feature_pipeline
+networks:
+  redpanda_network:
+    name: redpanda_network
+    driver: bridge
+services:
+  trade-producer:
+    build:
+      context: ../services/trade_producer
+    networks:
+      - redpanda_network
+    environment:
+      KAFKA_BROKER_ADDRESS: redpanda:9092
+      KAFKA_TOPIC: trades
+    volumes:
+      - ../logs:/app/logs
+
+  procesing-trades:
+    build:
+      context: ../services/processing_trades
+    networks:
+      - redpanda_network
+    environment:
+      KAFKA_BROKER_ADDRESS: redpanda:9092
+      KAFKA_INPUT_TOPIC: trades
+      KAFKA_OUTPUT_TOPIC: volume_bars
+
+  kafka-to-feature-store:
+    build:
+      context: ../services/kafka_to_feature_store
+    networks:
+      - redpanda_network
+    env_file:
+      - ../services/kafka_to_feature_store/.env
+    environment:
+      BROKER_ADDRESS: redpanda:9092
+      INPUT_TOPIC: volume_bars
+    volumes:
+      - ../logs:/app/logs

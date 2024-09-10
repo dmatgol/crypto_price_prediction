@@ -12,7 +12,7 @@ class KafkaSettings(BaseSettings):
     output_topic: str | None = None
 
     model_config = SettingsConfigDict(
-        env_file="services/kafka_to_feature_store/.env",
+        env_file=".env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -25,7 +25,7 @@ class HopsworkSettings(BaseSettings):
     api_key: str
 
     model_config = SettingsConfigDict(
-        env_file="services/kafka_to_feature_store/.env",
+        env_file=".env",
         env_nested_delimiter="__",
         extra="ignore",
     )

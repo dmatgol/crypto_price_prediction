@@ -56,6 +56,7 @@ class PublishToFeatureStore:
 
 
 if __name__ == "__main__":
+    logger.info(settings)
     write_to_feature_store = PublishToFeatureStore(
         settings.kafka.broker_address,
         settings.kafka.input_topic,
