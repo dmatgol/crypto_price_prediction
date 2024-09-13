@@ -38,7 +38,7 @@ class KafkaSettings(BaseSettings):
     kafka_topic: str
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="__"
+        env_file="services/trade_producer/.env", env_nested_delimiter="__"
     )
 
 
@@ -66,9 +66,11 @@ class Settings(BaseSettings):
 
     kafka: KafkaSettings = KafkaSettings()
     exchanges: list[Exchange]
+    live_or_historical: str  # TODO: add validation for this field
+    last_n_days: int
 
     model_config = SettingsConfigDict(
-        yaml_file="src/configs/config.yaml",
+        yaml_file="services/trade_producer/src/configs/config.yaml",
     )
 
     @classmethod

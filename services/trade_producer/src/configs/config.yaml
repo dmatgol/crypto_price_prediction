@@ -15,3 +15,6 @@ exchanges:
       - "XRP/USD"
     channels:
       - "trade"
+
+live_or_historical: "historical"
+last_n_days: 4

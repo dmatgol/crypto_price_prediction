@@ -1,7 +1,7 @@
 import json
 from typing import Any
 
-from api.base import BaseExchangeWebSocket
+from api.base_websocket import BaseExchangeWebSocket
 from monitoring.monitoring_metrics import monitoring
 from utils.logging_config import logger
 

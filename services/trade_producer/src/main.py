@@ -2,8 +2,8 @@ import asyncio
 import time
 from typing import Any
 
-from api.coinbase import CoinBaseWebsocketTradeAPI
-from api.kraken_api import KrakenWebsocketTradeAPI
+from api.base_rest import BaseExchangeRestAPI
+from api.base_websocket import BaseExchangeWebSocket
 from monitoring.monitoring_metrics import monitoring
 from quixstreams import Application
 from settings.config import settings
@@ -26,15 +26,13 @@ async def produce_trades() -> None:
     kraken_apis, coinbase_apis = instanteate_websocket_apis()
 
     # Producer write to kafka - send message to Kafka topic
-    tasks = [
-        run_websocket(api, app, topic) for api in kraken_apis + coinbase_apis
-    ]
+    tasks = [run_apis(api, app, topic) for api in kraken_apis + coinbase_apis]
 
     await asyncio.gather(*tasks)
 
 
-async def run_websocket(
-    websocket_api: KrakenWebsocketTradeAPI | CoinBaseWebsocketTradeAPI,
+async def run_apis(
+    api: BaseExchangeWebSocket | BaseExchangeRestAPI,
     app: Application,
     topic: Any,
 ):
@@ -42,26 +40,28 @@ async def run_websocket(
 
     Args:
     ----
-    websocket_api: The websocket API to run.
+    api: The websocket/rest API to run.
     app: The Quix application.
     topic: The Kafka topic.
 
     """
-    async with websocket_api:
+    async with api:
         with app.get_producer() as producer:
             while True:
+                if api.is_done():
+                    logger.info("Done fetching trades from API.")
+                    break
+
                 # Monitor performance
                 start_time = time.time()
-                trades = await websocket_api.run()
+                trades = await api.run()
                 latency = time.time() - start_time
-                monitoring.observe_request(
-                    exchange=websocket_api.name, metric=latency
-                )
-                monitoring.increment_request_count(exchange=websocket_api.name)
+                monitoring.observe_request(exchange=api.name, metric=latency)
+                monitoring.increment_request_count(exchange=api.name)
 
                 # Send trades to redpanda
                 for trade in trades:
-                    logger.info(trade)
+                    # logger.info(trade)
                     message = topic.serialize(trade["product_id"], value=trade)
                     producer.produce(
                         topic.name, value=message.value, key=message.key
