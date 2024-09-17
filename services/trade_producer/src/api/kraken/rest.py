@@ -81,10 +81,10 @@ class KrakenRestAPI(BaseExchangeRestAPI):
         trades = [
             {
                 "product_id": self.product_id,
-                "side": trade[3],
-                "price": trade[0],
-                "volume": trade[1],
-                "timestamp": int(trade[2] * 1000),
+                "side": "buy" if trade[3] == "b" else "sell",
+                "price": float(trade[0]),
+                "volume": float(trade[1]),
+                "timestamp": ts_to_date(int(trade[2] * 1000)),
                 "exchange": self.name,
             }
             for trade in trades["result"][self.product_id]
@@ -114,6 +114,9 @@ def ts_to_date(ts: int) -> str:
     ts (int): A timestamp in Unix milliseconds
 
     """
-    return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime(
-        "%Y-%m-%d %H:%M:%S.%f"
+    return (
+        datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime(
+            "%Y-%m-%dT%H:%M:%S.%f"
+        )
+        + "Z"
     )

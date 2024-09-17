@@ -36,6 +36,14 @@ class BaseExchangeWebSocket:
         if self._ws:
             await self._ws.close()
 
+    def is_done(self) -> bool:
+        """Check if all trades have been fetched.
+
+        The websocket never stops, so we never stop fetching trades.
+
+        """
+        return False
+
     async def connect(self, url: str):
         """Create a websocket connection."""
         try:
