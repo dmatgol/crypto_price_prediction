@@ -33,4 +33,5 @@ docker run -it --rm crypto_price_prediction
     how that affects metrics.
     - [] Clearly understand the values that are being shown in grafana.
 - [] Change processing to also add the exchange as feature
+- [] Add coinbase historical support
 - [] Add tests

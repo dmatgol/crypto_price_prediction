@@ -4,7 +4,10 @@ from settings.config import settings
 
 
 def push_data_to_feature_store(
-    feature_group_name: str, feature_group_version: int, data: dict
+    feature_group_name: str,
+    feature_group_version: int,
+    data: dict,
+    online_offline: str,
 ) -> None:
     """Read ohlc volume data and push it to feature store.
 
@@ -16,6 +19,8 @@ def push_data_to_feature_store(
     feature_group_name (str): The name of the feature group to write to.
     feature_group_version (int): The version of the feature group to write to.
     data (dict): The data to write to the feature group.
+    online_offline (str): Whether we are saving the `data` to the online or
+        offline feature group.
 
     """
     project = hopsworks.login(
@@ -33,10 +38,17 @@ def push_data_to_feature_store(
         online_enabled=True,
     )
 
-    df = pd.DataFrame([data])
+    df = pd.DataFrame(data)
     df = df.assign(
-        start_time=pd.to_datetime(data["start_time"]),
-        end_time=pd.to_datetime(data["end_time"]),
+        start_time=pd.to_datetime(df["start_time"]),
+        end_time=pd.to_datetime(df["end_time"]),
     )
 
-    ohlc_feature_group.insert(df)
+    ohlc_feature_group.insert(
+        df,
+        write_options={
+            "start_offline_materialization": (
+                True if online_offline == "offline" else False
+            )
+        },
+    )
