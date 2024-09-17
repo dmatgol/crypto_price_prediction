@@ -27,9 +27,11 @@ class KrakenRestAPI(BaseExchangeRestAPI):
             f"to_ms={ts_to_date(self.to_ms)}"
         )
 
-        # the timestamp from which we want to fetch historical data
-        # this will be updated after each batch of trades fetched from the API
+        # Initialize trade ID with 'since' parameter (start from desired time)
+        # This will be updated after each batch of trades fetched from the API
+        self.last_trade_id = self.from_ms * 1_000_000
         self.last_trade_ms = self.from_ms
+        self.last_trade_data = None
 
     @property
     def name(self) -> str:
@@ -54,8 +56,6 @@ class KrakenRestAPI(BaseExchangeRestAPI):
 
         """
         # get the current date at midnight using UTC
-        from datetime import datetime, timezone
-
         today_date = datetime.now(timezone.utc).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
@@ -72,14 +72,12 @@ class KrakenRestAPI(BaseExchangeRestAPI):
         self,
     ) -> list[dict]:
         """Read historical trades from the Kraken REST API."""
-        since_ns = self.last_trade_ms * 1_000_000
+        since_id = self.last_trade_id
 
-        params = {
-            "pair": self.product_id,
-            "since": since_ns,
-        }
+        params = {"pair": self.product_id, "since": since_id, "count": 5}
 
         trades = await self.get(params)
+        self.last_trade_id = trades["result"]["last"]
         trades = [
             {
                 "product_id": self.product_id,
@@ -92,15 +90,18 @@ class KrakenRestAPI(BaseExchangeRestAPI):
             for trade in trades["result"][self.product_id]
         ]
 
+        if trades:
+            # Update the last trade timestamp
+            self.last_trade_ms = trades[-1]["timestamp"]
+            if self.last_trade_data == trades[0]:
+                trades = trades[1:]
+            self.last_trade_data = trades[-1]
+
         logger.info(
             f"Fetched {len(trades)} trades for {self.product_id}, "
-            f"since={ns_to_date(since_ns)} from the Kraken REST API"
+            f"since={ts_to_date(trades[0]['timestamp'])} "
+            f"to={ts_to_date(self.last_trade_ms)} from the Kraken REST API"
         )
-
-        if trades[-1]["timestamp"] == self.last_trade_ms:
-            self.last_trade_ms = trades[-1]["timestamp"] + 1
-        else:
-            self.last_trade_ms = trades[-1]["timestamp"]
 
         return trades
 
@@ -114,18 +115,5 @@ def ts_to_date(ts: int) -> str:
 
     """
     return datetime.fromtimestamp(ts / 1000, tz=timezone.utc).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-
-
-def ns_to_date(ns: int) -> str:
-    """Transform a timestamp in Unix nanoseconds to a human-readable date.
-
-    Args:
-    ----
-    ns (int): A timestamp in Unix nanoseconds
-
-    """
-    return datetime.fromtimestamp(ns / 1_000_000_000, tz=timezone.utc).strftime(
-        "%Y-%m-%d %H:%M:%S"
+        "%Y-%m-%d %H:%M:%S.%f"
     )

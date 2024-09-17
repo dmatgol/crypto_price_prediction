@@ -106,7 +106,7 @@ class BaseExchangeRestAPI:
         dict: The JSON response from the API.
 
         """
-        return await self._make_request("GET", payload=params)
+        return await self._make_request(payload=params)
 
     async def get_historical_trades(self) -> list[dict]:
         """Read historical trades from the restapi and return a list of dicts.

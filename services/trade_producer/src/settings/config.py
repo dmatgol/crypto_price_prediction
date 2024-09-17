@@ -66,12 +66,22 @@ class Settings(BaseSettings):
 
     kafka: KafkaSettings = KafkaSettings()
     exchanges: list[Exchange]
-    live_or_historical: str  # TODO: add validation for this field
+    live_or_historical: str
     last_n_days: int
 
     model_config = SettingsConfigDict(
         yaml_file="services/trade_producer/src/configs/config.yaml",
     )
+
+    @field_validator("live_or_historical")
+    def validate_live_or_historical(cls, value):
+        """Validate live_or_historical."""
+        if value not in ["live", "historical"]:
+            raise ValueError(
+                f"Unsupported value: {value}. Supported values"
+                f"are: live, historical"
+            )
+        return value
 
     @classmethod
     def settings_customise_sources(
