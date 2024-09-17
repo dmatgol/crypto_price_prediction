@@ -44,8 +44,8 @@ class BaseExchangeRestAPI:
 
     @backoff.on_exception(
         backoff.expo,
-        aiohttp.ClientError,
-        max_tries=3,
+        (aiohttp.ClientError, Exception),
+        max_tries=10,
         jitter=backoff.full_jitter,
     )
     async def _make_request(
@@ -77,7 +77,23 @@ class BaseExchangeRestAPI:
                 ) as response:
                     response.raise_for_status()
                     logger.info(f"Request successful: {self.url}")
-                    return await response.json()
+                    response_data = await response.json()
+
+                    # Check if API returns "too many requests" in its own error
+                    # field
+                    if (
+                        "error" in response_data
+                        and "EGeneral:Too many requests"
+                        in response_data["error"]
+                    ):
+                        logger.warning(
+                            "API returned 'Too many requests'."
+                            "Retrying with backoff..."
+                        )
+                        # Simulate an exception to trigger backoff
+                        raise Exception("Too many requests")
+
+                    return response_data
 
             except aiohttp.ClientResponseError as e:
                 logger.error(f"HTTP error: {e}")

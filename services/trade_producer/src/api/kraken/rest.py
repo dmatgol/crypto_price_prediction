@@ -74,7 +74,7 @@ class KrakenRestAPI(BaseExchangeRestAPI):
         """Read historical trades from the Kraken REST API."""
         since_id = self.last_trade_id
 
-        params = {"pair": self.product_id, "since": since_id, "count": 5}
+        params = {"pair": self.product_id, "since": since_id}
 
         trades = await self.get(params)
         self.last_trade_id = trades["result"]["last"]
@@ -92,15 +92,15 @@ class KrakenRestAPI(BaseExchangeRestAPI):
 
         if trades:
             # Update the last trade timestamp
-            self.last_trade_ms = trades[-1]["timestamp"]
+            self.last_trade_ms = date_to_ts(trades[-1]["timestamp"])
             if self.last_trade_data == trades[0]:
                 trades = trades[1:]
             self.last_trade_data = trades[-1]
 
         logger.info(
             f"Fetched {len(trades)} trades for {self.product_id}, "
-            f"since={ts_to_date(trades[0]['timestamp'])} "
-            f"to={ts_to_date(self.last_trade_ms)} from the Kraken REST API"
+            f"since={trades[0]['timestamp']} "
+            f"to={trades[-1]['timestamp']} from the Kraken REST API"
         )
 
         return trades
@@ -120,3 +120,17 @@ def ts_to_date(ts: int) -> str:
         )
         + "Z"
     )
+
+
+def date_to_ts(date: str) -> int:
+    """Transform a human-readable date to Unix milliseconds.
+
+    Args:
+    ----
+    date (str): A human-readable date
+
+    """
+    dt = datetime.fromisoformat(date.replace("Z", "+00:00"))
+    unix_timestamp_seconds = dt.timestamp()
+    unix_timestamp_ms = int(unix_timestamp_seconds * 1000)
+    return unix_timestamp_ms
