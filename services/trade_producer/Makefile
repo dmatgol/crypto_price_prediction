@@ -14,5 +14,8 @@ run: build
 		--name=trade-producer \
 		trade-producer
 
-run-local:
-	poetry run python src/main.py
+run-local-historical:
+	LIVE_OR_HISTORICAL=historical LAST_N_DAYS=2 poetry run python src/main.py
+
+run-local-live:
+	LIVE_OR_HISTORICAL=live poetry run python src/main.py

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from pydantic import field_validator
 
 from pydantic_settings import (  # isort:skip
@@ -38,7 +40,7 @@ class KafkaSettings(BaseSettings):
     kafka_topic: str
 
     model_config = SettingsConfigDict(
-        env_file="services/trade_producer/.env", env_nested_delimiter="__"
+        env_file=".env", env_nested_delimiter="__", extra="ignore"
     )
 
 
@@ -67,10 +69,11 @@ class Settings(BaseSettings):
     kafka: KafkaSettings = KafkaSettings()
     exchanges: list[Exchange]
     live_or_historical: str
-    last_n_days: int
+    last_n_days: Optional[int]
 
     model_config = SettingsConfigDict(
-        yaml_file="services/trade_producer/src/configs/config.yaml",
+        yaml_file="src/configs/config.yaml",
+        env_file=".env",
     )
 
     @field_validator("live_or_historical")
@@ -94,6 +97,7 @@ class Settings(BaseSettings):
     ) -> tuple[YamlConfigSettingsSource, ...]:
         """Customise sources."""
         return (
+            env_settings,
             YamlConfigSettingsSource(
                 settings_cls,
             ),

@@ -16,5 +16,5 @@ exchanges:
     channels:
       - "trade"
 
-live_or_historical: "historical"
-last_n_days: 2
+live_or_historical: live
+last_n_days: 1
