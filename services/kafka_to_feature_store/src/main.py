@@ -19,12 +19,14 @@ class PublishToFeatureStore:
         self,
         broker_address: str,
         input_topic: str,
+        feature_group_primary_keys: list[str],
+        feature_group_event_time: str,
         consumer_group: str | None,
         feature_group: str | None,
         feature_group_version: int | None,
-        buffer_size: int | None = 1000,
+        buffer_size: int | None = 1,
         live_or_historical: str | None = "live",
-        save_every_n_sec: int | None = 60,
+        save_every_n_sec: int | None = 600,
     ) -> None:
         """Initialize the consumer step.
 
@@ -36,6 +38,8 @@ class PublishToFeatureStore:
         consumer_group (str): The Kafka consumer group to read messages.
         feature_group (str): The name of the feature group to write to.
         feature_group_version (int): Feature group version to write to.
+        feature_group_primary_keys (List[str]): The PR of the Feature Group
+        feature_group_event_time (str): The event time of the Feature Group
         live_or_historical (str, optional): Whether we are saving live data to
             the Feature or historical data.
             Live data goes to the online feature store
@@ -46,12 +50,14 @@ class PublishToFeatureStore:
         """
         self.broker_address = broker_address
         self.input_topic = input_topic
-        self.buffer_size = buffer_size
-        self.live_or_historical = live_or_historical
-        self.save_every_n_sec = save_every_n_sec
         self.consumer_group = consumer_group
         self.feature_group = feature_group
         self.feature_group_version = feature_group_version
+        self.feature_group_primary_keys = feature_group_primary_keys
+        self.feature_group_event_time = feature_group_event_time
+        self.buffer_size = buffer_size
+        self.live_or_historical = live_or_historical
+        self.save_every_n_sec = save_every_n_sec
 
     def run(self) -> None:
         """Read ohlc data from kafka and writes to feature store.
@@ -68,32 +74,54 @@ class PublishToFeatureStore:
 
         last_saved_to_feature_store_ts = get_current_utc_sec()
 
-        buffer = []
+        buffer: list[dict] = []
 
         with app.get_consumer() as consumer:
             consumer.subscribe(topics=[input_topic.name])
-
             while True:
                 msg = consumer.poll(1)
-
                 sec_since_last_saved = (
                     get_current_utc_sec() - last_saved_to_feature_store_ts
                 )
 
                 if msg is None:
+                    # If no message is received/ all messages are received
+                    # then save the remaining buffer
+                    if buffer and (
+                        sec_since_last_saved >= self.save_every_n_sec
+                    ):
+                        push_data_to_feature_store(
+                            self.feature_group,
+                            self.feature_group_version,
+                            self.feature_group_primary_keys,
+                            self.feature_group_event_time,
+                            buffer,
+                            online_offline=(
+                                "online"
+                                if self.live_or_historical == "live"
+                                else "offline"
+                            ),
+                        )
+                        logger.info(
+                            f"Buffer of {len(buffer)} messages sent to feature"
+                            "store"
+                        )
+                        buffer = []
+                        last_saved_to_feature_store_ts = get_current_utc_sec()
                     continue
-                elif msg.error():
+                if msg.error():
                     logger.error("Kafka error:", format(msg.error()))
                 else:
                     ohlc_message = json.loads(msg.value().decode("utf-8"))
                     buffer.append(ohlc_message)
-                    if (len(buffer) >= self.buffer_size) or (
-                        sec_since_last_saved >= self.save_every_n_sec
-                    ):
+
+                    if len(buffer) >= self.buffer_size:
                         push_data_to_feature_store(
-                            feature_group_name=self.feature_group,
-                            feature_group_version=self.feature_group_version,
-                            data=buffer,
+                            self.feature_group,
+                            self.feature_group_version,
+                            self.feature_group_primary_keys,
+                            self.feature_group_event_time,
+                            buffer,
                             online_offline=(
                                 "online"
                                 if self.live_or_historical == "live"
@@ -113,12 +141,14 @@ class PublishToFeatureStore:
 if __name__ == "__main__":
     logger.info(settings)
     write_to_feature_store = PublishToFeatureStore(
-        settings.kafka.broker_address,
-        settings.kafka.input_topic,
-        settings.kafka.consumer_group,
-        settings.kafka.feature_group,
-        settings.kafka.feature_group_version,
-        settings.buffer_size,
+        settings.app_settings.kafka_broker_address,
+        settings.app_settings.input_topic,
+        settings.app_settings.feature_group_primary_keys,
+        settings.app_settings.feature_group_event_time,
+        settings.app_settings.consumer_group,
+        settings.app_settings.feature_group,
+        settings.app_settings.feature_group_version,
+        settings.app_settings.buffer_size,
         settings.live_or_historical,
         settings.save_every_n_sec,
     )

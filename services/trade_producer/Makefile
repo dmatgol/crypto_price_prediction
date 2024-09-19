@@ -4,11 +4,24 @@ build:
 build-no-cache:
 	docker build --no-cache -t trade-producer .
 
-run: build
+run-historical: build
 	docker run \
 		--network=redpanda_network \
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
 		-e KAFKA_TOPIC=trades \
+		-e LIVE_OR_HISTORICAL=historical \
+		-e LAST_N_DAYS=2 \
+		-v $(PWD)/logs:/app/logs \
+		-p 8000:8000 \
+		--name=trade-producer \
+		trade-producer
+
+run-live: build
+	docker run \
+		--network=redpanda_network \
+		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
+		-e KAFKA_TOPIC=trades \
+		-e LIVE_OR_HISTORICAL=live \
 		-v $(PWD)/logs:/app/logs \
 		-p 8000:8000 \
 		--name=trade-producer \

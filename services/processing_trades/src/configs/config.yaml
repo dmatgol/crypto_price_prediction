@@ -1,17 +1,17 @@
 exchanges:
-  - name: coinbase
+  - name: kraken
     channels:
-      - ticker
+      - trade
 
 product_ids:
   - coin: "ETH-USD"
     aggregation:
       type: "volume"
-      interval: 1
+      interval: 40
   - coin: "BTC-USD"
     aggregation:
       type: "volume"
-      interval: 1
+      interval: 10
   - coin: "LTC-USD"
     aggregation:
       type: "volume"
@@ -19,4 +19,4 @@ product_ids:
   - coin: "XRP-USD"
     aggregation:
       type: "volume"
-      interval: 10000
+      interval: 40000

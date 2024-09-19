@@ -61,6 +61,7 @@ async def run_apis(
 
                 # Send trades to redpanda
                 for trade in trades:
+                    logger.info(f"Sending {trade} to redpanda")
                     message = topic.serialize(trade["product_id"], value=trade)
                     producer.produce(
                         topic.name, value=message.value, key=message.key

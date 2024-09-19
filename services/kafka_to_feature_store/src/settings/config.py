@@ -6,15 +6,18 @@ from pydantic_settings import (  # isort:skip
 )
 
 
-class KafkaSettings(BaseSettings):
-    """Database settings."""
+class AppSettings(BaseSettings):
+    """App settings."""
 
-    broker_address: str
+    kafka_broker_address: str
     input_topic: str | None = None
     output_topic: str | None = None
     consumer_group: str
     feature_group: str
     feature_group_version: int
+    feature_group_primary_keys: list[str]
+    feature_group_event_time: str
+    buffer_size: int = 1
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -30,7 +33,7 @@ class HopsworkSettings(BaseSettings):
     api_key: str
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="credentials.env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -39,9 +42,8 @@ class HopsworkSettings(BaseSettings):
 class Settings(BaseSettings):
     """Settings."""
 
-    kafka: KafkaSettings = KafkaSettings()
+    app_settings: AppSettings = AppSettings()
     hopswork: HopsworkSettings = HopsworkSettings()
-    buffer_size: int = 100000
     live_or_historical: str
     save_every_n_sec: int
 
