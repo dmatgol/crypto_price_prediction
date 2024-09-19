@@ -1,8 +1,8 @@
-name: feature_pipeline
 networks:
   redpanda_network:
     name: redpanda_network
     driver: bridge
+
 services:
   trade-producer:
     build:
@@ -12,7 +12,8 @@ services:
     environment:
       KAFKA_BROKER_ADDRESS: redpanda:9092
       KAFKA_TOPIC: trades
-      LIVE_OR_HISTORICAL: live
+      LIVE_OR_HISTORICAL: historical
+      LAST_N_DAYS: 3
     volumes:
       - ../logs:/app/logs
 
@@ -38,6 +39,6 @@ services:
       KAFKA_BROKER_ADDRESS: redpanda:9092
       INPUT_TOPIC: volume_bars
       BUFFER_SIZE: 10
-      LIVE_OR_HISTORICAL: live
+      LIVE_OR_HISTORICAL: historical
     volumes:
       - ../logs:/app/logs
