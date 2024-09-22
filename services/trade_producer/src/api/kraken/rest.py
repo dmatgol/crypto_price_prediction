@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from api.base_rest import BaseExchangeRestAPI
+from api.trade import Trade
 from utils.logging_config import logger
 
 
@@ -70,7 +71,7 @@ class KrakenRestAPI(BaseExchangeRestAPI):
 
     async def get_historical_trades(
         self,
-    ) -> list[dict]:
+    ) -> list[Trade]:
         """Read historical trades from the Kraken REST API."""
         since_id = self.last_trade_id
 
@@ -79,28 +80,28 @@ class KrakenRestAPI(BaseExchangeRestAPI):
         trades = await self.get(params)
         self.last_trade_id = trades["result"]["last"]
         trades = [
-            {
-                "product_id": self.product_id,
-                "side": "buy" if trade[3] == "b" else "sell",
-                "price": float(trade[0]),
-                "volume": float(trade[1]),
-                "timestamp": ts_to_date(int(trade[2] * 1000)),
-                "exchange": self.name,
-            }
+            Trade(
+                product_id=self.product_id,
+                side="buy" if trade[3] == "b" else "sell",
+                price=float(trade[0]),
+                volume=float(trade[1]),
+                timestamp=ts_to_date(int(trade[2] * 1000)),
+                exchange=self.name,
+            )
             for trade in trades["result"][self.product_id]
         ]
 
         if trades:
             # Update the last trade timestamp
-            self.last_trade_ms = date_to_ts(trades[-1]["timestamp"])
+            self.last_trade_ms = date_to_ts(trades[-1].timestamp)
             if self.last_trade_data == trades[0]:
                 trades = trades[1:]
             self.last_trade_data = trades[-1]
 
         logger.info(
             f"Fetched {len(trades)} trades for {self.product_id}, "
-            f"since={trades[0]['timestamp']} "
-            f"to={trades[-1]['timestamp']} from the Kraken REST API"
+            f"since={trades[0].timestamp} "
+            f"to={trades[-1].timestamp} from the Kraken REST API"
         )
 
         return trades

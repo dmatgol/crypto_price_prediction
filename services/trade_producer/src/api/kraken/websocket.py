@@ -1,6 +1,7 @@
 import json
 
 from api.base_websocket import BaseExchangeWebSocket
+from api.trade import Trade
 from monitoring.monitoring_metrics import monitoring
 from utils.logging_config import logger
 
@@ -68,7 +69,7 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
             await self._ws.recv()
             await self._ws.recv()
 
-    async def get_trades(self) -> list[dict]:
+    async def get_trades(self) -> list[Trade]:
         """Read trades from the Kraken websocket and return a list of dicts.
 
         Returns
@@ -86,14 +87,14 @@ class KrakenWebsocketTradeAPI(BaseExchangeWebSocket):
         trades = []
         for trade in message.get("data", []):
             trades.append(
-                {
-                    "product_id": trade["symbol"],
-                    "side": trade["side"],
-                    "price": trade["price"],
-                    "volume": trade["qty"],
-                    "timestamp": trade["timestamp"],
-                    "exchange": self.name,
-                }
+                Trade(
+                    product_id=trade["symbol"],
+                    side=trade["side"],
+                    price=trade["price"],
+                    volume=trade["qty"],
+                    timestamp=trade["timestamp"],
+                    exchange=self.name,
+                )
             )
 
         return trades

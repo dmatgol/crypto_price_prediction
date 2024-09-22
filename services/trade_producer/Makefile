@@ -8,7 +8,7 @@ run-historical: build
 	docker run \
 		--network=redpanda_network \
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
-		-e KAFKA_TOPIC=trades \
+		-e KAFKA_TOPIC=trades_historical \
 		-e LIVE_OR_HISTORICAL=historical \
 		-e LAST_N_DAYS=2 \
 		-v $(PWD)/logs:/app/logs \
@@ -28,7 +28,7 @@ run-live: build
 		trade-producer
 
 run-local-historical:
-	LIVE_OR_HISTORICAL=historical LAST_N_DAYS=2 poetry run python src/main.py
+	LIVE_OR_HISTORICAL=historical LAST_N_DAYS=2 KAFKA_TOPIC=trades_historical poetry run python src/main.py
 
 run-local-live:
 	LIVE_OR_HISTORICAL=live poetry run python src/main.py

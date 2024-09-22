@@ -6,7 +6,7 @@ from api.kraken.websocket import KrakenWebsocketTradeAPI
 from settings.config import HighVolumeCoinPairs, SupportedExchanges, settings
 
 
-def instanteate_websocket_apis() -> (
+def instanteate_apis() -> (
     tuple[KrakenWebsocketTradeAPI, CoinBaseWebsocketTradeAPI]
 ):
     """Instantiate KrakenWebsocketTradeAPI and CoinBaseWebsocketTradeAPI."""

@@ -9,11 +9,13 @@ from quixstreams import Application
 from settings.config import settings
 from utils.logging_config import logger
 
-from utils.helpers import instanteate_websocket_apis  # isort:skip
+from utils.helpers import instanteate_apis  # isort:skip
 
 
 async def produce_trades() -> None:
-    """Read trades from Kraken websocket and send them to a Kafka topic.
+    """Read trades from from api and send them to a Kafka topic.
+
+    Supports both websocket and rest apis.
 
     Args:
     ----
@@ -23,7 +25,7 @@ async def produce_trades() -> None:
     app = Application(broker_address=settings.kafka.kafka_broker_address)
     topic = app.topic(name=settings.kafka.kafka_topic, value_serializer="json")
 
-    kraken_apis, coinbase_apis = instanteate_websocket_apis()
+    kraken_apis, coinbase_apis = instanteate_apis()
 
     # Producer write to kafka - send message to Kafka topic
     tasks = [run_apis(api, app, topic) for api in kraken_apis + coinbase_apis]
@@ -47,10 +49,7 @@ async def run_apis(
     """
     async with api:
         with app.get_producer() as producer:
-            while True:
-                if api.is_done():
-                    logger.info("Done fetching trades from API.")
-                    break
+            while not api.is_done():
 
                 # Monitor performance
                 start_time = time.time()
@@ -62,7 +61,9 @@ async def run_apis(
                 # Send trades to redpanda
                 for trade in trades:
                     logger.info(f"Sending {trade} to redpanda")
-                    message = topic.serialize(trade["product_id"], value=trade)
+                    message = topic.serialize(
+                        trade.product_id, value=trade.model_dump()
+                    )
                     producer.produce(
                         topic.name, value=message.value, key=message.key
                     )
