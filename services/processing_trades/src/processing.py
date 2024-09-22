@@ -7,12 +7,17 @@ class Preprocessing:
     """Preprocessing utilities."""
 
     def __init__(
-        self, broker_address: str, input_topic: str, output_topic: str
+        self,
+        broker_address: str,
+        input_topic: str,
+        output_topic: str,
+        kafka_consumer_group: str,
     ) -> None:
         """Initialize the preprocessing step."""
         self.broker_address = broker_address
         self.input_topic = input_topic
         self.output_topic = output_topic
+        self.kafka_consumer_group = kafka_consumer_group
 
     def run(self) -> None:
         """Create trade bars for the defined methods."""
@@ -21,7 +26,7 @@ class Preprocessing:
         # Need to create validation/tests for available methods.
         app = Application(
             broker_address=self.broker_address,
-            consumer_group="trade_to_volume_bar",
+            consumer_group=self.kafka_consumer_group,
             auto_offset_reset="earliest",
         )
 
@@ -53,5 +58,6 @@ if __name__ == "__main__":
         settings.kafka.kafka_broker_address,
         settings.kafka.kafka_input_topic,
         settings.kafka.kafka_output_topic,
+        settings.kafka.kafka_consumer_group,
     )
     preprocessing.run()

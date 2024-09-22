@@ -26,6 +26,7 @@ class KafkaSettings(BaseSettings):
     kafka_broker_address: str
     kafka_input_topic: str
     kafka_output_topic: str
+    kafka_consumer_group: str
 
     model_config = SettingsConfigDict(
         env_file=".env", env_nested_delimiter="__"

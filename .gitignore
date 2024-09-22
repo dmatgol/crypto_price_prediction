@@ -145,3 +145,4 @@ logs/
 
 # .env files
 .env
+.credentials.env

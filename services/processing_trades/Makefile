@@ -7,6 +7,7 @@ run-live: build
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
 		-e KAFKA_INPUT_TOPIC=trades \
 		-e KAFKA_OUTPUT_TOPIC=volume_bars \
+		-e KAFKA_CONSUMER_GROUP=trade_to_volume_ohlc_live
 		-v $(PWD)/logs:/app/logs \
 		--name=trade-processor \
 		trade-processor
@@ -17,6 +18,7 @@ run-historical: build
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
 		-e KAFKA_INPUT_TOPIC=trades_historical \
 		-e KAFKA_OUTPUT_TOPIC=volume_bars \
+		-e KAFKA_CONSUMER_GROUP=trade_to_volume_ohlc_historical
 		-v $(PWD)/logs:/app/logs \
 		--name=trade-processor \
 		trade-processor
@@ -24,9 +26,11 @@ run-historical: build
 run-local-historical:
 	KAFKA_INPUT_TOPIC=trades_historical \
 	KAFKA_OUTPUT_TOPIC=volume_bars_historical \
+	KAFKA_CONSUMER_GROUP=trade_to_volume_ohlc_historical
 	poetry run python src/processing.py
 
 run-local-live:
 	KAFKA_INPUT_TOPIC=trades \
 	KAFKA_OUTPUT_TOPIC=volume_bars \
+	KAFKA_CONSUMER_GROUP=trade_to_volume_ohlc_live
 	poetry run python src/processing.py
