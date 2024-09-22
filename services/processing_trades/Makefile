@@ -17,7 +17,7 @@ run-historical: build
 		--network=redpanda_network \
 		-e KAFKA_BROKER_ADDRESS=redpanda:9092 \
 		-e KAFKA_INPUT_TOPIC=trades_historical \
-		-e KAFKA_OUTPUT_TOPIC=volume_bars \
+		-e KAFKA_OUTPUT_TOPIC=volume_bars_historical \
 		-e KAFKA_CONSUMER_GROUP=trade_to_volume_ohlc_historical
 		-v $(PWD)/logs:/app/logs \
 		--name=trade-processor \

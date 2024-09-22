@@ -1,3 +1,5 @@
+name: backfill_pipeline
+
 networks:
   redpanda_network:
     name: redpanda_network
@@ -11,7 +13,7 @@ services:
       - redpanda_network
     environment:
       KAFKA_BROKER_ADDRESS: redpanda:9092
-      KAFKA_TOPIC: trades
+      KAFKA_TOPIC: trades_historical
       LIVE_OR_HISTORICAL: historical
       LAST_N_DAYS: 3
     volumes:
@@ -24,8 +26,9 @@ services:
       - redpanda_network
     environment:
       KAFKA_BROKER_ADDRESS: redpanda:9092
-      KAFKA_INPUT_TOPIC: trades
-      KAFKA_OUTPUT_TOPIC: volume_bars
+      KAFKA_INPUT_TOPIC: trades_historical
+      KAFKA_OUTPUT_TOPIC: volume_bars_historical
+      KAFKA_CONSUMER_GROUP: trade_to_volume_ohlc_historical
 
   kafka-to-feature-store:
     build:
@@ -37,7 +40,7 @@ services:
       - ../services/kafka_to_feature_store/credentials.env
     environment:
       KAFKA_BROKER_ADDRESS: redpanda:9092
-      INPUT_TOPIC: volume_bars
+      INPUT_TOPIC: volume_bars_historical
       BUFFER_SIZE: 10
       LIVE_OR_HISTORICAL: historical
     volumes:

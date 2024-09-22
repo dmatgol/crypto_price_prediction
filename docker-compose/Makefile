@@ -4,8 +4,8 @@ start-redpanda:
 stop-redpanda:
 	docker-compose -f redpandas-docker-compose.yml down
 
-build-feature-pipeline:
+run-build-feature-pipeline:
 	docker-compose -f feature-pipeline-docker-compose.yml up --build
 
-build-backfill-pipeline:
+run-build-backfill-pipeline:
 	docker-compose -f backfill-pipeline-docker-compose.yml up --build
