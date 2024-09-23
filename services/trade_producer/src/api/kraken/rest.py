@@ -10,16 +10,19 @@ class KrakenRestAPI(BaseExchangeRestAPI):
 
     URL = "https://api.kraken.com/0/public/Trades"
 
-    def __init__(self, product_id: str, last_n_days: int) -> None:
+    def __init__(
+        self, product_id: str, last_n_days: int, cache_dir: str | None = None
+    ) -> None:
         """Initialize the KrakenRestAPI with the provided REST URL.
 
         Args:
         ----
         product_id: The product ID to fetch trades for.
         last_n_days: The number of days from which we want to get trades.
+        cache_dir: The directory to store the cached trade data.
 
         """
-        super().__init__(self.URL, product_id, last_n_days)
+        super().__init__(self.URL, product_id, last_n_days, cache_dir)
         self.from_ms, self.to_ms = self._init_from_to_ms(last_n_days)
 
         logger.info(
@@ -77,32 +80,49 @@ class KrakenRestAPI(BaseExchangeRestAPI):
 
         params = {"pair": self.product_id, "since": since_id}
 
-        trades = await self.get(params)
-        self.last_trade_id = trades["result"]["last"]
-        trades = [
-            Trade(
-                product_id=self.product_id,
-                side="buy" if trade[3] == "b" else "sell",
-                price=float(trade[0]),
-                volume=float(trade[1]),
-                timestamp=ts_to_date(int(trade[2] * 1000)),
-                exchange=self.name,
+        url = self.URL + "?" + "&".join([f"{k}={v}" for k, v in params.items()])
+        if self.use_cache and self.cache.has(url):
+            trades, last_trade_id = self.cache.read(url)
+            logger.info(
+                f"Loaded {len(trades)} for {self.product_id} from cache"
+                f" since={trades[0].timestamp} to={trades[-1].timestamp}"
             )
-            for trade in trades["result"][self.product_id]
-        ]
-
-        if trades:
-            # Update the last trade timestamp
-            self.last_trade_ms = date_to_ts(trades[-1].timestamp)
-            if self.last_trade_data == trades[0]:
-                trades = trades[1:]
+            self.last_trade_id = last_trade_id
             self.last_trade_data = trades[-1]
+        else:
+            trades = await self.get(params)
+            self.last_trade_id = trades["result"]["last"]
+            trades = [
+                Trade(
+                    product_id=self.product_id,
+                    side="buy" if trade[3] == "b" else "sell",
+                    price=float(trade[0]),
+                    volume=float(trade[1]),
+                    timestamp=ts_to_date(int(trade[2] * 1000)),
+                    exchange=self.name,
+                )
+                for trade in trades["result"][self.product_id]
+            ]
 
-        logger.info(
-            f"Fetched {len(trades)} trades for {self.product_id}, "
-            f"since={trades[0].timestamp} "
-            f"to={trades[-1].timestamp} from the Kraken REST API"
-        )
+            if trades:
+                # Update the last trade timestamp
+                self.last_trade_ms = date_to_ts(trades[-1].timestamp)
+                if self.last_trade_data == trades[0]:
+                    trades = trades[1:]
+                self.last_trade_data = trades[-1]
+
+            if self.use_cache:
+                self.cache.write(url, trades, self.last_trade_id)
+                logger.info(
+                    f"Wrote {len(trades)} for {self.product_id} to cache"
+                    f" since={trades[0].timestamp} to={trades[-1].timestamp}"
+                )
+
+            logger.info(
+                f"Fetched {len(trades)} trades for {self.product_id}, "
+                f"since={trades[0].timestamp} "
+                f"to={trades[-1].timestamp} from the Kraken REST API"
+            )
 
         return trades
 

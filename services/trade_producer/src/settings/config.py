@@ -40,7 +40,9 @@ class KafkaSettings(BaseSettings):
     kafka_topic: str
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="__", extra="ignore"
+        env_file=".env",
+        env_nested_delimiter="__",
+        extra="ignore",
     )
 
 
@@ -63,17 +65,17 @@ class Exchange(BaseSettings):
         return value
 
 
-class Settings(BaseSettings):
-    """Settings."""
+class LiveHistoricalSettings(BaseSettings):
+    """Run live or historical."""
 
-    kafka: KafkaSettings = KafkaSettings()
-    exchanges: list[Exchange]
     live_or_historical: str
     last_n_days: Optional[int]
+    cache_dir_historical_data: Optional[str] = None
 
     model_config = SettingsConfigDict(
-        yaml_file="src/configs/config.yaml",
         env_file=".env",
+        env_nested_delimiter="__",
+        extra="ignore",
     )
 
     @field_validator("live_or_historical")
@@ -85,6 +87,20 @@ class Settings(BaseSettings):
                 f"are: live, historical"
             )
         return value
+
+
+class Settings(BaseSettings):
+    """Settings."""
+
+    kafka: KafkaSettings = KafkaSettings()
+    exchanges: list[Exchange]
+    live_or_historical_settings: LiveHistoricalSettings = (
+        LiveHistoricalSettings()
+    )
+
+    model_config = SettingsConfigDict(
+        yaml_file="src/configs/config.yaml",
+    )
 
     @classmethod
     def settings_customise_sources(
