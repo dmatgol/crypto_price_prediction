@@ -16,6 +16,7 @@ services:
       LIVE_OR_HISTORICAL: live
     volumes:
       - ../logs:/app/logs
+    restart: always
 
   procesing-trades:
     build:
@@ -27,6 +28,7 @@ services:
       KAFKA_INPUT_TOPIC: trades
       KAFKA_OUTPUT_TOPIC: volume_bars
       KAFKA_CONSUMER_GROUP: trade_to_volume_ohlc_live
+    restart: always
 
   kafka-to-feature-store:
     build:
@@ -43,3 +45,4 @@ services:
       LIVE_OR_HISTORICAL: live
     volumes:
       - ../logs:/app/logs
+    restart: always

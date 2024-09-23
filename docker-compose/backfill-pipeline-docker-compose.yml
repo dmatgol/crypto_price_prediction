@@ -18,6 +18,7 @@ services:
       LAST_N_DAYS: 3
     volumes:
       - ../logs:/app/logs
+    restart: on-failure
 
   procesing-trades:
     build:
@@ -29,6 +30,7 @@ services:
       KAFKA_INPUT_TOPIC: trades_historical
       KAFKA_OUTPUT_TOPIC: volume_bars_historical
       KAFKA_CONSUMER_GROUP: trade_to_volume_ohlc_historical
+    restart: always
 
   kafka-to-feature-store:
     build:
@@ -45,3 +47,4 @@ services:
       LIVE_OR_HISTORICAL: historical
     volumes:
       - ../logs:/app/logs
+    restart: always
