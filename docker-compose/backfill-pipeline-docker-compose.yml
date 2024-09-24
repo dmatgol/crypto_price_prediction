@@ -13,11 +13,13 @@ services:
       - redpanda_network
     environment:
       KAFKA_BROKER_ADDRESS: redpanda:9092
-      KAFKA_TOPIC: trades_historical
+      KAFKA_TOPIC: trades_historical_123
       LIVE_OR_HISTORICAL: historical
       LAST_N_DAYS: 3
+      CACHE_DIR_HISTORICAL_DATA: /tmp/historical_trade_data
     volumes:
       - ../logs:/app/logs
+      - /tmp/historical_trade_data:/tmp/historical_trade_data
     restart: on-failure
 
   procesing-trades:
