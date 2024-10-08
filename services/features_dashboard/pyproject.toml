@@ -1,0 +1,45 @@
+[tool.poetry]
+name = "features_dashboard"
+version = "0.1.0"
+description = ""
+authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+streamlit = "^1.38.0"
+hopsworks = "^3.7.0"
+pydantic = "^2.9.2"
+pydantic-settings = "^2.5.2"
+
+[tool.poetry.dev-dependencies]
+types-pyyaml = "^6.0.12.20240311"
+pycln = "^2.4.0"
+pytest = "^6.2.4"
+black = "^21.7b0"
+mypy = "^0.910"
+pre-commit = "^2.13.0"
+ruff = "^0.5.4"
+
+
+[tool.ruff]
+line-length = 80
+select = [
+    "E",  # Pycodestyle errors
+    "F",  # Pyflakes errors
+    "D",  # pydocstyle errors for docstring checks
+    "B",  # Bugbear for finding common issues
+    "I",  # isort for import sorting
+]
+ignore = [
+    "D100",  # Ignore missing docstring in public module
+    "D104",  # Ignore missing docstring in public package
+]
+
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
