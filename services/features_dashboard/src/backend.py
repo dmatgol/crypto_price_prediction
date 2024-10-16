@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import hopsworks
 import pandas as pd
 from settings.config import settings
@@ -8,6 +10,9 @@ def get_features_from_the_store(
     feature_group_version: int,
     feature_view_name: str,
     feature_view_version: int,
+    time_range: tuple[datetime, datetime],
+    product_id: str,
+    online: bool = True,
 ) -> pd.DataFrame:
     """Fetch the features from the store and return them as a dataframe.
 
@@ -17,6 +22,9 @@ def get_features_from_the_store(
     feature_group_version (int): The version of the feature group to fetch from.
     feature_view_name (str): The name of the feature view to fetch from.
     feature_view_version (int): The version of the feature view to fetch from.
+    time_range (tuple[datetime, datetime]): The time range to fetch from and to.
+    product_id (str): The product id to fetch.
+    online (bool): Whether to fetch from online store.
 
     Returns:
     -------
@@ -40,18 +48,14 @@ def get_features_from_the_store(
         version=feature_view_version,
         query=feature_group.select_all(),
     )
-
     features: pd.DataFrame = feature_view.get_batch_data()
-
-    return features
-
-
-if __name__ == "__main__":
-    print(settings)
-    data = get_features_from_the_store(
-        feature_group_name=settings.app_settings.feature_group,
-        feature_group_version=settings.app_settings.feature_group_version,
-        feature_view_name=settings.app_settings.feature_view,
-        feature_view_version=settings.app_settings.feature_view_version,
+    product_id_filter = features["product_id"] == product_id
+    time_range_utc = (
+        pd.to_datetime(time_range[0]).tz_localize("UTC"),  # Localize to UTC
+        pd.to_datetime(time_range[1]).tz_localize("UTC"),  # Localize to UTC
     )
-    print(data.head())
+    time_filter = (features["start_time"] > time_range_utc[0]) & (
+        features["start_time"] <= time_range_utc[1]
+    )
+    features = features[time_filter & product_id_filter]
+    return features
