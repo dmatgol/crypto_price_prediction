@@ -42,7 +42,7 @@ class AggregationMethod(BaseSettings):
     @field_validator("type")
     def validate_type(cls, value):
         """Validate if data aggregation type is supported."""
-        allowed_types = {"volume", "time", "tick"}
+        allowed_types = {"volume", "time", "tick imbalance"}
         if value not in allowed_types:
             raise ValueError(
                 f"Type '{value}' not allowed. Must be one of {allowed_types}."
@@ -83,7 +83,7 @@ class Settings(BaseSettings):
     product_ids: list[ProductId]
 
     model_config = SettingsConfigDict(
-        yaml_file="src/configs/config.yaml",
+        yaml_file="src/configs/tick_imbalance_config.yaml",
     )
 
     @classmethod

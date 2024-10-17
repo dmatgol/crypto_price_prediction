@@ -33,7 +33,7 @@ run-local-historical:
 	LIVE_OR_HISTORICAL=historical \
 	LAST_N_DAYS=2 \
 	KAFKA_TOPIC=trades_historical \
-	CACHE_DIR_HISTORICAL_DATA=/tmp/historical_trade_data
+	CACHE_DIR_HISTORICAL_DATA=/tmp/historical_trade_data \
 	poetry run python src/main.py
 
 run-local-live:

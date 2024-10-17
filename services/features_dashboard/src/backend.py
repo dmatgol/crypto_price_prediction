@@ -49,6 +49,7 @@ def get_features_from_the_store(
         query=feature_group.select_all(),
     )
     features: pd.DataFrame = feature_view.get_batch_data()
+
     product_id_filter = features["product_id"] == product_id
     time_range_utc = (
         pd.to_datetime(time_range[0]).tz_localize("UTC"),  # Localize to UTC

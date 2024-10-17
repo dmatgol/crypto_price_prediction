@@ -2,6 +2,7 @@ from abc import abstractmethod
 from collections import defaultdict
 from typing import Any
 
+from quixstreams import State
 from utils.logging_config import logger
 
 
@@ -36,7 +37,7 @@ class FinanceDataStructure:
         pass
 
     @abstractmethod
-    def process_trade(self, trade: dict) -> None:
+    def process_trade(self, trade: dict, state: State | None) -> None:
         """Process the trade and update the data structure."""
         pass
 

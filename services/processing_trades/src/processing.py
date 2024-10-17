@@ -1,4 +1,4 @@
-from finance_data_structures.volume_bars import VolumeBars
+from finance_data_structures.tick_imbalance_bars import TickImbalanceBars
 from quixstreams import Application
 from settings.config import settings
 
@@ -29,6 +29,7 @@ class Preprocessing:
             consumer_group=self.kafka_consumer_group,
             auto_offset_reset="earliest",
         )
+        app.clear_state()
 
         input_topic = app.topic(name=self.input_topic, value_serializer="json")
         output_topic = app.topic(
@@ -39,21 +40,18 @@ class Preprocessing:
         sdf = app.dataframe(input_topic)
 
         with app.get_producer() as producer:
-            volume_bars = VolumeBars(
+            tick_imbalance_bars = TickImbalanceBars(
                 producer, output_topic, settings.product_ids
             )
             # Apply the process_trade function to each incoming message
-            sdf = sdf.apply(
-                lambda trade: volume_bars.process_trade(
-                    trade,
-                )
-            )
+            sdf = sdf.apply(tick_imbalance_bars.process_trade, stateful=True)
 
         # Run the application
         app.run(sdf)
 
 
 if __name__ == "__main__":
+    print(settings)
     preprocessing = Preprocessing(
         settings.kafka.kafka_broker_address,
         settings.kafka.kafka_input_topic,
