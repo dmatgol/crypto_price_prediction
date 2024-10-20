@@ -29,7 +29,6 @@ class Preprocessing:
             consumer_group=self.kafka_consumer_group,
             auto_offset_reset="earliest",
         )
-        app.clear_state()
 
         input_topic = app.topic(name=self.input_topic, value_serializer="json")
         output_topic = app.topic(

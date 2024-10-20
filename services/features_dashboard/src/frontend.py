@@ -13,46 +13,51 @@ def plot_volume_candles(df: pd.DataFrame):
     df["end_time"] = pd.to_datetime(df["end_time"])
 
     product_id = df["product_id"].iloc[0]
-    volume = df["volume"].iloc[0]
-    # Create a figure with datetime as the x-axis
-    p = figure(
-        x_axis_type="datetime",
-        title=f"Volume based Candlestick Chart {product_id}, Volume: {volume}",
-        width=800,
-        height=400,
+
+    # Calculate the middle point for each candle (to plot the bar in the center)
+    df["middle_time"] = (
+        df["start_time"] + (df["end_time"] - df["start_time"]) / 2
     )
 
-    # Plot each candlestick with variable width based on start_time and end_time
-    for _index, row in df.iterrows():
-        # Candle width is the difference between start_time and end_time
-        candle_width = (
-            row["end_time"] - row["start_time"]
-        ).total_seconds() * 1000  # Convert to milliseconds
+    # Calculate the width of each candle (in milliseconds)
+    df["width"] = (
+        df["end_time"] - df["start_time"]
+    ).dt.total_seconds() * 1000  # Convert to milliseconds
 
-        # Determine the color of the candle based on if it was an up or down day
-        if row["close"] > row["open"]:
-            color = "green"
-        else:
-            color = "red"
+    # Determine which candles are increasing or decreasing
+    inc = df.close > df.open
+    dec = df.open > df.close
 
-        # Candle body (rectangle)
-        p.rect(
-            x=row["start_time"],
-            y=(row["open"] + row["close"]) / 2,
-            width=candle_width,
-            height=abs(row["close"] - row["open"]),
-            fill_color=color,
-            line_color=color,
-        )
+    # Set x-axis range with a small buffer around the min and max times
+    p = figure(
+        x_axis_type="datetime",
+        width=1000,
+        title=f"Tick imbalanced Candlestick for {product_id}",
+    )
+    p.grid.grid_line_alpha = 0.3
 
-        # Candle wicks (high/low lines)
-        p.segment(
-            x0=row["start_time"],
-            y0=row["high"],
-            x1=row["start_time"],
-            y1=row["low"],
-            line_color="black",
-        )
+    # Plot the candle wicks (high/low lines)
+    p.segment(df.middle_time, df.high, df.middle_time, df.low, color="black")
+
+    # Plot the increasing candles (green)
+    p.vbar(
+        x=df.middle_time[inc],
+        width=df.width[inc],
+        bottom=df.open[inc],
+        top=df.close[inc],
+        fill_color="#70bd40",
+        line_color="black",
+    )
+
+    # Plot the decreasing candles (red)
+    p.vbar(
+        x=df.middle_time[dec],
+        width=df.width[dec],
+        bottom=df.open[dec],
+        top=df.close[dec],
+        fill_color="#F2583E",
+        line_color="black",
+    )
 
     # Set axis labels
     p.xaxis.axis_label = "Time"

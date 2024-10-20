@@ -31,7 +31,7 @@ run-live: build
 
 run-local-historical:
 	LIVE_OR_HISTORICAL=historical \
-	LAST_N_DAYS=2 \
+	LAST_N_DAYS=90 \
 	KAFKA_TOPIC=trades_historical \
 	CACHE_DIR_HISTORICAL_DATA=/tmp/historical_trade_data \
 	poetry run python src/main.py

@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import hopsworks
 import pandas as pd
 from settings.config import settings
@@ -42,9 +44,24 @@ def push_data_to_feature_store(
     )
 
     df = pd.DataFrame(data)
+
+    def iso_to_unix(iso_str: str) -> int:
+        """Convert iso string to unix timestamp.
+
+        Args:
+        ----
+        iso_str (str): Time in ISO format.
+
+        """
+        timestamp = datetime.fromisoformat(iso_str[:-1]).replace(
+            tzinfo=timezone.utc
+        )
+        return int(timestamp.timestamp() * 1000)
+
+    df["end_timestamp_unix"] = df["end_time"].apply(iso_to_unix)
     df = df.assign(
-        start_time=pd.to_datetime(df["start_time"]),
-        end_time=pd.to_datetime(df["end_time"]),
+        start_time=pd.to_datetime(df["start_time"], utc=True),
+        end_time=pd.to_datetime(df["end_time"], utc=True),
     )
 
     ohlc_feature_group.insert(

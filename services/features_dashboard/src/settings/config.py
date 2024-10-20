@@ -15,7 +15,7 @@ class SupportedCoins:
     @classmethod
     def get_supported_exchanges(cls) -> list[str]:
         """Get supported exchanges."""
-        return [cls.ETH_USD, cls.BTC_USD, cls.LTC_USD, cls.XRP_USD]
+        return [cls.BTC_USD, cls.ETH_USD, cls.LTC_USD, cls.XRP_USD]
 
 
 class AppSettings(BaseSettings):

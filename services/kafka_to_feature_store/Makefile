@@ -29,8 +29,8 @@ run-live: build
 
 run-local-historical:
 	LIVE_OR_HISTORICAL=historical \
-	BUFFER_SIZE=1000 \
-	INPUT_TOPIC=volume_bars_historical \
+	BUFFER_SIZE=2000 \
+	INPUT_TOPIC=tick_imbalance_bars_historical \
 	poetry run python src/main.py
 
 run-local-live:

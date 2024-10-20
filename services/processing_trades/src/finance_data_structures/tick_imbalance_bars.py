@@ -69,7 +69,7 @@ class TickImbalanceBars(FinanceDataStructure):
                     "high": max(high, trade["price"]),
                     "low": min(low, trade["price"]),
                     "close": trade["price"],
-                    "volume": volume + trade["volume"],
+                    "volume": round(volume + trade["volume"], 4),
                     "end_time": trade["timestamp"],
                     "start_time": state.get("start_time"),
                     "tick_imbalance": cumulative_imbalance,
