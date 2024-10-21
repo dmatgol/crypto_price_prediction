@@ -2,6 +2,7 @@ import json
 from typing import Any
 
 from api.base_websocket import BaseExchangeWebSocket
+from api.trade import Trade
 from monitoring.monitoring_metrics import monitoring
 from utils.logging_config import logger
 
@@ -74,14 +75,14 @@ class CoinBaseWebsocketTradeAPI(BaseExchangeWebSocket):
 
             if "type" in json_response and json_response["type"] == "ticker":
                 return [
-                    {
-                        "product_id": json_response["product_id"],
-                        "side": json_response["side"],
-                        "price": float(json_response["price"]),
-                        "volume": float(json_response["last_size"]),
-                        "timestamp": json_response["time"],
-                        "exchange": self.name,
-                    }
+                    Trade(
+                        product_id=json_response["product_id"],
+                        side=json_response["side"],
+                        price=float(json_response["price"]),
+                        volume=float(json_response["last_size"]),
+                        timestamp=json_response["time"],
+                        exchange=self.name,
+                    )
                 ]
         except Exception as e:
             logger.error(f"Error while reading trades: {e}")
