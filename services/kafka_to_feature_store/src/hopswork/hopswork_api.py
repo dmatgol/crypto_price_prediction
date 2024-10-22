@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timezone
 
 import hopsworks
@@ -72,3 +73,58 @@ def push_data_to_feature_store(
             )
         },
     )
+
+    if online_offline == "online":
+        index_fg = fs.get_or_create_feature_group(
+            name=f"{feature_group_name}_timestamp_index",
+            version=feature_group_version,
+            description="Index feature containing trade timestamps",
+            primary_key=["product_id"],
+            online_enabled=True,
+        )
+        product_id = df["product_id"]
+        timestamp_unix = df["timestamp_unix"]
+        index_df = index_fg.read_online(keys=[product_id])
+        if index_df.empty:
+            timestamps_list = []
+        else:
+            index_row = index_df.iloc[0]
+            timestamps_str = index_row["timestamps_unix"]
+            timestamps_list = deserialize_timestamps(timestamps_str)
+
+        # Add the new timestamp to the list
+        timestamps_list.append(timestamp_unix)
+
+        # Remove timestamps older than desired time window (e.g., last 3 hours)
+        current_time_unix = int(datetime.now(timezone.utc).timestamp())
+        time_window_seconds = 3 * 60 * 60  # 3 hours
+        cutoff_time = current_time_unix - time_window_seconds
+        timestamps_list = [ts for ts in timestamps_list if ts >= cutoff_time]
+
+        # Serialize and update the index feature group
+        updated_index_data = {
+            "product_id": product_id,
+            "timestamps_unix": serialize_timestamps(timestamps_list),
+        }
+        index_df = pd.DataFrame([updated_index_data])
+        index_fg.insert(index_df, write_options={"wait_for_job": False})
+
+
+def deserialize_timestamps(timestamps_str: str):
+    """Deserialize timestamps string.
+
+    Args:
+    ----
+    timestamps_str (str): The timestamps string to deserialize.
+    """
+    return json.loads(timestamps_str)
+
+
+def serialize_timestamps(timestamps_list: list[str]):
+    """Serialize timestamps string.
+
+    Args:
+    ----
+    timestamps_list (list[str]): The timestamps string to deserialize.
+    """
+    return json.dumps(timestamps_list)

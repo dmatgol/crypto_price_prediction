@@ -10,13 +10,13 @@ product_ids:
       interval: 150
   - coin: "BTC-USD"
     aggregation:
-      type: "volume"
+      type: "tick imbalance"
       interval: 250
   - coin: "LTC-USD"
     aggregation:
-      type: "volume"
+      type: "tick imbalance"
       interval: 100
   - coin: "XRP-USD"
     aggregation:
-      type: "volume"
+      type: "tick imbalance"
       interval: 75
