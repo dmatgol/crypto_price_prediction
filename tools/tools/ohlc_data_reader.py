@@ -5,7 +5,8 @@ import pandas as pd
 from hsfs.feature_store import FeatureStore
 from hsfs.feature_view import FeatureView
 from loguru import logger
-from settings import settings
+
+from tools.settings import SupportedCoins, settings
 
 
 class OhlcDataReader:
@@ -93,10 +94,12 @@ class OhlcDataReader:
 
         # filter the features for the given product_id and time range
         features = features[features["product_id"] == product_id]
-        features = features[features["timestamp"] >= from_timestamp_ms]
-        features = features[features["timestamp"] <= to_timestamp_ms]
+        features = features[features["end_timestamp_unix"] >= from_timestamp_ms]
+        features = features[features["end_timestamp_unix"] <= to_timestamp_ms]
         # sort the features by timestamp (ascending)
-        features = features.sort_values(by="timestamp").reset_index(drop=True)
+        features = features.sort_values(by="end_timestamp_unix").reset_index(
+            drop=True
+        )
         return features
 
     @staticmethod
@@ -121,7 +124,7 @@ if __name__ == "__main__":
 
     # check if reading from the offline store works
     output = ohlc_data_reader.read_from_offline_store(
-        product_id="BTC/USD",
+        product_id=SupportedCoins.BTC_USD.value,
         last_n_days=90,
     )
     logger.debug(f"Historical OHLC data: {output}")

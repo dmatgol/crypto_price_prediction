@@ -2,6 +2,26 @@ from pydantic_settings import (  # isort:skip
     BaseSettings,
     SettingsConfigDict,
 )
+from enum import Enum
+
+
+class SupportedCoins(Enum):
+    """Supported exchanges."""
+
+    ETH_USD: str = "ETH-USD"
+    BTC_USD: str = "BTC-USD"
+    LTC_USD: str = "LTC-USD"
+    XRP_USD: str = "XRP-USD"
+
+    @classmethod
+    def get_supported_exchanges(cls) -> list[str]:
+        """Get supported exchanges."""
+        return [coin.name for coin in cls]
+
+    @classmethod
+    def validate(cls, coin_name: str) -> bool:
+        """Validate coin name."""
+        return coin_name in cls.get_supported_exchanges()
 
 
 class AppSettings(BaseSettings):
@@ -13,7 +33,7 @@ class AppSettings(BaseSettings):
     feature_view_version: int
 
     model_config = SettingsConfigDict(
-        env_file="tools/.env",
+        env_file=".env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -26,7 +46,7 @@ class HopsworkSettings(BaseSettings):
     api_key: str
 
     model_config = SettingsConfigDict(
-        env_file="tools/.credentials.env",
+        env_file=".credentials.env",
         env_nested_delimiter="__",
         extra="ignore",
     )
