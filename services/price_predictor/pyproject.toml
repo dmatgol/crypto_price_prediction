@@ -8,6 +8,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
 tools = {path = "../../tools", develop = true}
+ipykernel = "^6.29.5"
+seaborn = "^0.13.2"
 
 
 [tool.poetry.dev-dependencies]

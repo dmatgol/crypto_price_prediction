@@ -1,4 +1,4 @@
-import time
+from datetime import datetime, timezone
 
 import hopsworks
 import pandas as pd
@@ -86,12 +86,16 @@ class OhlcDataReader:
         last_n_days: The number of days to read data for.
 
         """
-        to_timestamp_ms = int(time.time() * 1000)
+        current_utc_timestamp = datetime.now(timezone.utc).timestamp()
+        to_timestamp_ms = int(current_utc_timestamp * 1000)
         from_timestamp_ms = to_timestamp_ms - last_n_days * 24 * 60 * 60 * 1000
 
         feature_view = self._get_feature_view()
         features = feature_view.get_batch_data()
 
+        to_datetime = datetime.fromtimestamp(to_timestamp_ms / 1000)
+        from_datetime = datetime.fromtimestamp(from_timestamp_ms / 1000)
+        logger.info(f"Reading data from {from_datetime} to {to_datetime}")
         # filter the features for the given product_id and time range
         features = features[features["product_id"] == product_id]
         features = features[features["end_timestamp_unix"] >= from_timestamp_ms]

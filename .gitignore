@@ -150,3 +150,6 @@ credentials.env
 
 # QUIXSTREAMS state
 state/
+
+# Notebook
+*.ipynb
