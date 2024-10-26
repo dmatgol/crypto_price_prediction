@@ -1,4 +1,5 @@
 import json
+import uuid
 from datetime import datetime, timezone
 
 from hopswork.hopswork_api import push_data_to_feature_store
@@ -22,6 +23,7 @@ class PublishToFeatureStore:
         feature_group_primary_keys: list[str],
         feature_group_event_time: str,
         consumer_group: str | None,
+        new_consumer_group: bool,
         feature_group: str | None,
         feature_group_version: int | None,
         buffer_size: int | None = 1,
@@ -36,6 +38,7 @@ class PublishToFeatureStore:
         input_topic (str): The kafka topic to read from.
         buffer_size (int, optional): The buffer size. Defaults to 1000.
         consumer_group (str): The Kafka consumer group to read messages.
+        new_consumer_group (bool): Whether to create a new consumer group.
         feature_group (str): The name of the feature group to write to.
         feature_group_version (int): Feature group version to write to.
         feature_group_primary_keys (List[str]): The PR of the Feature Group
@@ -51,6 +54,7 @@ class PublishToFeatureStore:
         self.broker_address = broker_address
         self.input_topic = input_topic
         self.consumer_group = consumer_group
+        self.new_consumer_group = new_consumer_group
         self.feature_group = feature_group
         self.feature_group_version = feature_group_version
         self.feature_group_primary_keys = feature_group_primary_keys
@@ -65,11 +69,16 @@ class PublishToFeatureStore:
         Specifically, it write the data to the feature group specified by
         `feature_group_name` and `feature_group_version`.
         """
+        if self.new_consumer_group:
+            self.consumer_group = f"{self.consumer_group}_{uuid.uuid4()}"
+            logger.debug(f"New Consumer group: {self.consumer_group}")
+
         app = Application(
             broker_address=self.broker_address,
             consumer_group=self.consumer_group,
             auto_offset_reset="earliest",
         )
+
         input_topic = app.topic(name=self.input_topic, value_serializer="json")
 
         last_saved_to_feature_store_ts = get_current_utc_sec()
@@ -146,6 +155,7 @@ if __name__ == "__main__":
         settings.app_settings.feature_group_primary_keys,
         settings.app_settings.feature_group_event_time,
         settings.app_settings.consumer_group,
+        settings.app_settings.create_new_consumer_group,
         settings.app_settings.feature_group,
         settings.app_settings.feature_group_version,
         settings.app_settings.buffer_size,

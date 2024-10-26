@@ -13,6 +13,7 @@ class AppSettings(BaseSettings):
     input_topic: str | None = None
     output_topic: str | None = None
     consumer_group: str
+    create_new_consumer_group: bool = False
     feature_group: str
     feature_group_version: int
     feature_group_primary_keys: list[str]
