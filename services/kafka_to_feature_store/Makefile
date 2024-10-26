@@ -23,13 +23,15 @@ run-live: build
 		-e INPUT_TOPIC=volume_bars \
 		-e BUFFER_SIZE=1 \
 		-e LIVE_OR_HISTORICAL=live \
+		-e CREATE_NEW_CONSUMER_GROUP=True \
 		-v $(PWD)/logs:/app/logs \
 		--name=volume_bars-to-feature-store \
 		volume_bars-to-feature-store
 
 run-local-historical:
 	LIVE_OR_HISTORICAL=historical \
-	BUFFER_SIZE=2000 \
+	BUFFER_SIZE=10000 \
+	CREATE_NEW_CONSUMER_GROUP=True \
 	INPUT_TOPIC=tick_imbalance_bars_historical \
 	poetry run python src/main.py
 
