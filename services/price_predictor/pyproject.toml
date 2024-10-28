@@ -10,6 +10,7 @@ python = ">=3.12,<3.13"
 tools = {path = "../../tools", develop = true}
 ipykernel = "^6.29.5"
 seaborn = "^0.13.2"
+scikit-learn = "^1.5.2"
 
 
 [tool.poetry.dev-dependencies]

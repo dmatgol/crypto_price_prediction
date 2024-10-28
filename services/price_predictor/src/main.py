@@ -1,25 +1,31 @@
-import numpy as np
 import pandas as pd
-from tools.logging_config import logger
-from tools.ohlc_data_reader import OhlcDataReader
-from tools.settings import SupportedCoins
+from sklearn.metrics import mean_absolute_error
+
+from tools.logging_config import logger  # isort: skip
+from tools.ohlc_data_reader import OhlcDataReader  # isort: skip
+from tools.settings import SupportedCoins  # isort: skip
+
+from models.baseline_models import MovingAverageBaseline  # isort: skip
+from models.baseline_models import TrainMeanPctChangeBaseline  # isort: skip
 
 
-def train(
+def main(
     feature_view_name: str,
     feature_view_version: int,
     product_id: str,
     last_n_days_to_fetch_from_store: int,
     last_n_days_to_test_model: int,
-    discretization_thresholds: list[float],
     prediction_window_tick: int,
 ):
-    """Train a model to generate price predictions.
+    """Run main pipeline to generate price predictions.
 
     The model follows the following steps:
     1. Fetch OHLC data from the feature store.
     2. Create the target variable.
     3. Train the model.
+    4. Generate predictions with baseline model
+    5. Compare model predictions vs baseline model predictions.
+
 
     Args:
     ----
@@ -28,10 +34,10 @@ def train(
     product_id: The product_id to read data for.
     last_n_days_to_fetch_from_store: The number of days to read data from.
     last_n_days_to_test_model: The number of days to test the model on.
-    discretization_thresholds: The discretization thresholds.
     prediction_window_tick: The prediction window tick into the future.
 
     """
+    # Step 1 - Fetch OHLC data
     ohlc_data_reader = OhlcDataReader(
         feature_view_name=feature_view_name,
         feature_view_version=feature_view_version,
@@ -45,19 +51,34 @@ def train(
     train_df, test_df = temporal_train_test_split(
         ohlc_data, last_n_days_to_test_model=last_n_days_to_test_model
     )
+
     logger.info("Creating target variable for trainset.")
-    train_df = create_target_variable(
-        train_df, discretization_thresholds, prediction_window_tick
-    )
+    train_df = create_target_variable(train_df, prediction_window_tick)
     logger.info("Creating target variable for testset.")
-    test_df = create_target_variable(
-        test_df, discretization_thresholds, prediction_window_tick
+    test_df = create_target_variable(test_df, prediction_window_tick)
+    logger.info(
+        "--------Train / Test split ----------- \n"
+        f"Train: {train_df["product_id"].count()}\n"
+        f"Test: {test_df["product_id"].count()}\n"
     )
 
-    logger.info("Distribution of the target in the train data")
-    logger.info(train_df["target"].value_counts())
-    logger.info("Distribution of the target in the test data")
-    logger.info(test_df["target"].value_counts())
+    # Split into features and target for each set
+    X_train, _ = train_df.drop("target", axis=1), train_df["target"]
+    X_test, y_test = test_df.drop("target", axis=1), test_df["target"]
+
+    logger.info("Generating predictions with moving average baseline model.")
+    ma = MovingAverageBaseline(window_size=10)
+    baseline_predictions = ma.predict(X_test)
+    mae_pct_change = mean_absolute_error(y_test, baseline_predictions)
+    logger.info(f"Mean Absolute Error: {mae_pct_change}")
+
+    logger.info("Generating predictions with simple baseline model.")
+    simple_baseline = TrainMeanPctChangeBaseline(
+        mean_pct_change=X_train["pct_change"].mean()
+    )
+    baseline_predictions = simple_baseline.predict(X_test)
+    mae_pct_change = mean_absolute_error(y_test, baseline_predictions)
+    logger.info(f"Mean Absolute Error: {mae_pct_change}")
 
 
 def temporal_train_test_split(
@@ -85,7 +106,6 @@ def temporal_train_test_split(
 
 def create_target_variable(
     ohlc_data: pd.DataFrame,
-    discretization_thresholds: list[float],
     prediction_window_tick: int,
 ) -> pd.DataFrame:
     """Create the target variable based on future close percentage changes.
@@ -94,47 +114,26 @@ def create_target_variable(
     close price of the current tick with the close price of a future tick,
     defined by `prediction_window_tick`.
 
-    Targets are defined as follows:
-    0: The %change is negative and falls below the min discretization threshold.
-    1: The %change is negligible (within the discretization thresh around zero).
-    2: The %change is positive and exceeds the maximum discretization threshold.
-
     Args:
     ----
     ohlc_data: The OHLC data to create the target variable for.
-    discretization_thresholds: The discretization thresholds.
     prediction_window_tick: The number of ticks in the future to compare
 
     """
-
-    def discretize_target(x: float) -> int:
-        if x <= discretization_thresholds[0]:
-            return 0
-        elif x < discretization_thresholds[1]:
-            return 1
-        elif x >= discretization_thresholds[1]:
-            return 2
-        else:
-            return np.nan
-
     ohlc_data["pct_change"] = (
         ohlc_data["close"].pct_change(periods=prediction_window_tick) * 100
     )
-    ohlc_data["target"] = (
-        ohlc_data["pct_change"]
-        .apply(discretize_target)
-        .shift(-prediction_window_tick)
-    )
-    return ohlc_data
+    ohlc_data["target"] = ohlc_data["pct_change"].shift(-prediction_window_tick)
+
+    return ohlc_data.dropna(subset=["target"])
 
 
 if __name__ == "__main__":
-    train(
+    main(
         feature_view_name="ohlc_feature_view",
         feature_view_version=1,
         product_id=SupportedCoins.BTC_USD.value,
         last_n_days_to_fetch_from_store=30,
         last_n_days_to_test_model=2,
-        discretization_thresholds=[-0.1, 0.1],
         prediction_window_tick=1,
     )
