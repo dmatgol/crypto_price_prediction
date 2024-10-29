@@ -33,7 +33,7 @@ class AppSettings(BaseSettings):
     feature_view_version: int
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="services/price_predictor/.env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -46,7 +46,7 @@ class HopsworkSettings(BaseSettings):
     api_key: str
 
     model_config = SettingsConfigDict(
-        env_file=".credentials.env",
+        env_file="services/price_predictor/.credentials.env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -57,6 +57,10 @@ class Settings(BaseSettings):
 
     app_settings: AppSettings = AppSettings()
     hopswork: HopsworkSettings = HopsworkSettings()
+
+    features_configuration: str = (
+        "services/price_predictor//src/config/features.yaml"
+    )
 
 
 settings = Settings()

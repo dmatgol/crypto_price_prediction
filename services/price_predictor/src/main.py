@@ -1,4 +1,5 @@
 import pandas as pd
+from feature_engineering import FeatureEngineer
 from sklearn.metrics import mean_absolute_error
 
 from tools.logging_config import logger  # isort: skip
@@ -7,6 +8,8 @@ from tools.settings import SupportedCoins  # isort: skip
 
 from models.baseline_models import MovingAverageBaseline  # isort: skip
 from models.baseline_models import TrainMeanPctChangeBaseline  # isort: skip
+
+FEATURE_ENGINEER_CONFIG = "services/price_predictor/src/configs/config.yaml"
 
 
 def main(
@@ -65,6 +68,11 @@ def main(
     # Split into features and target for each set
     X_train, _ = train_df.drop("target", axis=1), train_df["target"]
     X_test, y_test = test_df.drop("target", axis=1), test_df["target"]
+
+    # Add Features based on some feature engineering
+    logger.info("Feature engineering pipeline.")
+    feature_engineer_train = FeatureEngineer(X_train, FEATURE_ENGINEER_CONFIG)
+    X_train = feature_engineer_train.add_features()
 
     logger.info("Generating predictions with moving average baseline model.")
     ma = MovingAverageBaseline(window_size=10)

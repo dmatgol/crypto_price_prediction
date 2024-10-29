@@ -1,0 +1,11 @@
+log_return:
+  n_bars: 5
+
+rsi_indicator:
+  rsi_timeperiod: 14
+
+momentum_indicator:
+  momentum_timeperiod: 14
+
+volatility_indicator:
+  volatility_timeperiod: 14

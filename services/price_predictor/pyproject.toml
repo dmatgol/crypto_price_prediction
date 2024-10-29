@@ -11,6 +11,7 @@ tools = {path = "../../tools", develop = true}
 ipykernel = "^6.29.5"
 seaborn = "^0.13.2"
 scikit-learn = "^1.5.2"
+ta-lib = "^0.4.32"
 
 
 [tool.poetry.dev-dependencies]

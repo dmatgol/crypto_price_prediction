@@ -4247,6 +4247,19 @@ pure-eval = "*"
 tests = ["cython", "littleutils", "pygments", "pytest", "typeguard"]
 
 [[package]]
+name = "ta-lib"
+version = "0.4.32"
+description = "Python wrapper for TA-Lib"
+optional = false
+python-versions = "*"
+files = [
+    {file = "TA-Lib-0.4.32.tar.gz", hash = "sha256:fb74c323217bead847a045c97aa17bfd147aef17e20a75857ea0f8f7ee7cdaa0"},
+]
+
+[package.dependencies]
+numpy = "*"
+
+[[package]]
 name = "terminado"
 version = "0.18.1"
 description = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
@@ -4651,4 +4664,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "15fdc2976b678204a878fec315f1f857839da1af2bbe6f3b5988c56445ea836c"
+content-hash = "633a905d6723a988b1ac86ef52d6b99498a0204f399c397c48b094e7a9b3f690"
