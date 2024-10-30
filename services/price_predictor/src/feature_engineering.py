@@ -63,9 +63,14 @@ class FeatureEngineer:
 
         Purpose: Capture compounded returns over bars
         """
-        df[f"log_return_{n_bars}"] = np.log(
-            df["close"] / df["close"].shift(n_bars).fillna(0)
-        )
+        aux = df.copy()
+        aux["returns"] = df["close"] / df["close"].shift(n_bars)
+        for i in range(n_bars):
+            aux["returns"].iloc[i] = (
+                df["close"].iloc[: i + 1] / df["close"].shift(i).iloc[: i + 1]
+            ).iloc[i]
+
+        df[f"log_return_{n_bars}"] = np.log(aux["returns"])
         return df
 
     def add_rsi_indicator(
@@ -85,7 +90,12 @@ class FeatureEngineer:
         df[f"rsi_{rsi_timeperiod}"] = talib.RSI(
             df["close"], timeperiod=rsi_timeperiod
         )
-        return df
+        # Progressive filling
+        for i in range(1, rsi_timeperiod):
+            df[f"rsi_{rsi_timeperiod}"].iloc[i] = talib.RSI(
+                df["close"].iloc[: i + 1], timeperiod=i + 1
+            ).iloc[-1]
+        return df.fillna(0)  # first row will always be NaN
 
     def add_momentum_indicator(
         self, df: pd.DataFrame, momentum_timeperiod: int | None = 14
@@ -107,7 +117,7 @@ class FeatureEngineer:
         return df
 
     def add_volatility_indicator(
-        self, df: pd.DataFrame, vol_timeperiod: int | None = 14
+        self, df: pd.DataFrame, volatility_timeperiod: int | None = 14
     ) -> pd.DataFrame:
         """Add Volatility indicator to the dataframe.
 
@@ -117,10 +127,164 @@ class FeatureEngineer:
         Args:
         ----
         df (pd.DataFrame): The dataframe to process.
-        vol_timeperiod (int): The time period for the volatility indicator.
+        volatility_timeperiod (int): The time period for the volatility.
 
         """
-        df[f"volatility_{vol_timeperiod}"] = (
-            df["pct_change"].rolling(window=vol_timeperiod).std()
+        df[f"volatility_{volatility_timeperiod}"] = (
+            df["pct_change"].rolling(window=volatility_timeperiod).std()
+        )
+        return df
+
+    def add_cumulative_price_change(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add the cumulative price change within each tick imbalance bar.
+
+        Purpose: Measures price movement strength and direction across the bar.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+
+        """
+        df["cumulative_price_change"] = (df["close"] - df["open"]) / df["open"]
+        return df
+
+    def add_high_low_pct_range(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add the high-low percentage range within each bar.
+
+        Purpose: Captures the volatility and price range within each bar.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+
+        """
+        df["high_low_pct"] = (df["high"] - df["low"]) / df["low"]
+        return df
+
+    def add_vwap(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add Volume Weighted Average Price (VWAP) within each bar.
+
+        Purpose: Provides a benchmark for the average traded price per volume,
+        indicating value.
+        """
+        df["vwap"] = (df["close"] * df["volume"]).cumsum() / df[
+            "volume"
+        ].cumsum()
+        return df
+
+    def add_average_trade_size(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add average trade size within each bar.
+
+        Purpose: Identifies average transaction size, which can indicate
+        institutional activity.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+
+        """
+        df["average_trade_size"] = df["volume"] / np.abs(df["tick_imbalance"])
+        df["average_trade_size"] = df["average_trade_size"].fillna(0)
+        return df
+
+    def add_accumulation_distribution_index(
+        self, df: pd.DataFrame
+    ) -> pd.DataFrame:
+        """Add Accumulation/Distribution Index (ADI).
+
+        ADI is computed based on close, high, low, and volume.
+
+        Purpose: Tracks the cumulative flow of volume into or out of an
+        asset to identify accumulation or distribution.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+
+        """
+        df["adi"] = (
+            ((df["close"] - df["low"]) - (df["high"] - df["close"]))
+            * df["volume"]
+            / (df["high"] - df["low"] + 1e-5)
+        )
+        df["adi"] = df["adi"].fillna(0).cumsum()  # Cumulative ADI
+        return df
+
+    def add_moving_average(self, df: pd.DataFrame, window: int = 10):
+        """Add a simple moving average of close prices over a specified window.
+
+        Nans are filled with a progressive rolling average.
+
+        Purpose: Smooths short-term price fluctuations and captures
+        longer-term trends.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+        window (int): The window size for the moving average.
+
+        """
+        df[f"moving_avg_{window}"] = df["close"].rolling(window=window).mean()
+        for i in range(window - 1):
+            partial_ma = df["close"].iloc[: i + 1].rolling(i + 1).mean().iloc[i]
+            df[f"moving_avg_{window}"].iloc[i] = partial_ma
+        return df
+
+    def add_ema(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
+        """Add an Exponential Moving Average (EMA) of the close price.
+
+        Purpose: Provides a smoother moving average that responds more
+        quickly to recent prices.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+        window (int): The window size for the moving average.
+
+        """
+        df[f"ema_{window}"] = talib.EMA(df["close"], timeperiod=window)
+        for i in range(window - 1):
+            df[f"ema_{window}"].iloc[i] = talib.EMA(
+                df["close"].iloc[: i + 1], timeperiod=i + 1
+            ).iloc[i]
+        return df
+
+    def add_skewness(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
+        """Add skewness of returns within a rolling window.
+
+        Purpose: Measures asymmetry in the distribution of returns,
+        indicating directional bias.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+        window (int): The window size for the rolling skewness calculation.
+
+        """
+        df["skewness"] = (
+            df["log_return"]
+            .rolling(window=window)
+            .apply(lambda x: x.skew(), raw=False)
+            .fillna(0)
+        )
+        return df
+
+    def add_kurtosis(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
+        """Add kurtosis of returns within a rolling window.
+
+        Purpose: Measures the 'tailedness' of returns distribution, indicating
+        outlier likelihood.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+        window (int): The window size for the rolling kurtosis calculation.
+
+        """
+        df["kurtosis"] = (
+            df["log_return"]
+            .rolling(window=window)
+            .apply(lambda x: x.kurt(), raw=False)
+            .fillna(0)
         )
         return df

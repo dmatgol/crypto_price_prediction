@@ -9,3 +9,20 @@ momentum_indicator:
 
 volatility_indicator:
   volatility_timeperiod: 14
+
+cumulative_price_change: {}
+high_low_pct_range: {}
+vwap: {}
+average_trade_size: {}
+accumulation_distribution_index: {}
+moving_average:
+  window: 3
+
+ema:
+  window: 10
+
+skewness:
+  window: 10
+
+kurtosis:
+  window: 10
