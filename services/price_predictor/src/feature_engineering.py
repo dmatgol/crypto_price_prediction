@@ -53,7 +53,11 @@ class FeatureEngineer:
             method_name = f"add_{feature_name}"
             method = getattr(self, method_name, None)
             if method:
-                df = method(df, **parms) if parms else method(df)
+                if isinstance(parms, list):
+                    for param in parms:
+                        df = method(df, **param) if parms else method(df)
+                else:
+                    df = method(df, **parms) if parms else method(df)
             else:
                 logger.debug(f"Method {method_name} not found.")
         return df
@@ -64,13 +68,13 @@ class FeatureEngineer:
         Purpose: Capture compounded returns over bars
         """
         aux = df.copy()
-        aux["returns"] = df["close"] / df["close"].shift(n_bars)
+        aux.loc[:, "returns"] = df["close"] / df["close"].shift(n_bars)
         for i in range(n_bars):
-            aux["returns"].iloc[i] = (
+            aux.loc[i, "returns"] = (
                 df["close"].iloc[: i + 1] / df["close"].shift(i).iloc[: i + 1]
             ).iloc[i]
 
-        df[f"log_return_{n_bars}"] = np.log(aux["returns"])
+        df.loc[:, f"log_return_{n_bars}"] = np.log(aux["returns"])
         return df
 
     def add_rsi_indicator(
@@ -87,15 +91,18 @@ class FeatureEngineer:
         rsi_timeperiod (int): The time period for the RSI indicator.
 
         """
-        df[f"rsi_{rsi_timeperiod}"] = talib.RSI(
+        df.loc[:, f"rsi_{rsi_timeperiod}"] = talib.RSI(
             df["close"], timeperiod=rsi_timeperiod
         )
-        # Progressive filling
-        for i in range(1, rsi_timeperiod):
-            df[f"rsi_{rsi_timeperiod}"].iloc[i] = talib.RSI(
-                df["close"].iloc[: i + 1], timeperiod=i + 1
+        # Progressive filling - assume a minimum of 7 data points
+        # otherwise rsi will be always very high.
+        mean = df[f"rsi_{rsi_timeperiod}"].mean()
+        for i in range(7, rsi_timeperiod):
+            df.loc[i, f"rsi_{rsi_timeperiod}"] = talib.RSI(
+                df["close"].iloc[: i + 1], timeperiod=i
             ).iloc[-1]
-        return df.fillna(0)  # first row will always be NaN
+        df.loc[:, f"rsi_{rsi_timeperiod}"].fillna(mean, inplace=True)
+        return df
 
     def add_momentum_indicator(
         self, df: pd.DataFrame, momentum_timeperiod: int | None = 14
@@ -111,9 +118,14 @@ class FeatureEngineer:
         momentum_timeperiod (int): The time period for the momentum indicator.
 
         """
-        df[f"momentum_{momentum_timeperiod}"] = talib.MOM(
+        df.loc[:, f"momentum_{momentum_timeperiod}"] = talib.MOM(
             df["close"], timeperiod=momentum_timeperiod
         )
+        for i in range(1, momentum_timeperiod):
+            df.loc[i, f"momentum_{momentum_timeperiod}"] = talib.MOM(
+                df["close"].iloc[: i + 1], timeperiod=i
+            ).iloc[-1]
+        df[f"momentum_{momentum_timeperiod}"].fillna(0, inplace=True)
         return df
 
     def add_volatility_indicator(
@@ -130,9 +142,15 @@ class FeatureEngineer:
         volatility_timeperiod (int): The time period for the volatility.
 
         """
-        df[f"volatility_{volatility_timeperiod}"] = (
+        df.loc[:, f"volatility_{volatility_timeperiod}"] = (
             df["pct_change"].rolling(window=volatility_timeperiod).std()
         )
+        # Progressive filling
+        for i in range(2, volatility_timeperiod):
+            df.loc[i, f"volatility_{volatility_timeperiod}"] = (
+                df["pct_change"].iloc[1 : i + 1].rolling(i).std().iloc[-1]
+            )
+        df[f"volatility_{volatility_timeperiod}"].fillna(0, inplace=True)
         return df
 
     def add_cumulative_price_change(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -145,7 +163,9 @@ class FeatureEngineer:
         df (pd.DataFrame): The dataframe to process.
 
         """
-        df["cumulative_price_change"] = (df["close"] - df["open"]) / df["open"]
+        df.loc[:, "cumulative_price_change"] = (df["close"] - df["open"]) / df[
+            "open"
+        ]
         return df
 
     def add_high_low_pct_range(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -158,7 +178,7 @@ class FeatureEngineer:
         df (pd.DataFrame): The dataframe to process.
 
         """
-        df["high_low_pct"] = (df["high"] - df["low"]) / df["low"]
+        df.loc[:, "high_low_pct"] = (df["high"] - df["low"]) / df["low"]
         return df
 
     def add_vwap(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -167,7 +187,7 @@ class FeatureEngineer:
         Purpose: Provides a benchmark for the average traded price per volume,
         indicating value.
         """
-        df["vwap"] = (df["close"] * df["volume"]).cumsum() / df[
+        df.loc[:, "vwap"] = (df["close"] * df["volume"]).cumsum() / df[
             "volume"
         ].cumsum()
         return df
@@ -183,8 +203,9 @@ class FeatureEngineer:
         df (pd.DataFrame): The dataframe to process.
 
         """
-        df["average_trade_size"] = df["volume"] / np.abs(df["tick_imbalance"])
-        df["average_trade_size"] = df["average_trade_size"].fillna(0)
+        df.loc[:, "average_trade_size"] = df["volume"] / np.abs(
+            df["tick_imbalance"]
+        )
         return df
 
     def add_accumulation_distribution_index(
@@ -202,12 +223,11 @@ class FeatureEngineer:
         df (pd.DataFrame): The dataframe to process.
 
         """
-        df["adi"] = (
+        df.loc[:, "adi"] = (
             ((df["close"] - df["low"]) - (df["high"] - df["close"]))
             * df["volume"]
             / (df["high"] - df["low"] + 1e-5)
         )
-        df["adi"] = df["adi"].fillna(0).cumsum()  # Cumulative ADI
         return df
 
     def add_moving_average(self, df: pd.DataFrame, window: int = 10):
@@ -224,10 +244,13 @@ class FeatureEngineer:
         window (int): The window size for the moving average.
 
         """
-        df[f"moving_avg_{window}"] = df["close"].rolling(window=window).mean()
+        df.loc[:, f"moving_avg_{window}"] = (
+            df["close"].rolling(window=window).mean()
+        )
         for i in range(window - 1):
-            partial_ma = df["close"].iloc[: i + 1].rolling(i + 1).mean().iloc[i]
-            df[f"moving_avg_{window}"].iloc[i] = partial_ma
+            df.loc[i, f"moving_avg_{window}"] = (
+                df["close"].iloc[: i + 1].rolling(i + 1).mean().iloc[i]
+            )
         return df
 
     def add_ema(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
@@ -242,11 +265,12 @@ class FeatureEngineer:
         window (int): The window size for the moving average.
 
         """
-        df[f"ema_{window}"] = talib.EMA(df["close"], timeperiod=window)
-        for i in range(window - 1):
-            df[f"ema_{window}"].iloc[i] = talib.EMA(
+        df.loc[:, f"ema_{window}"] = talib.EMA(df["close"], timeperiod=window)
+        for i in range(1, window):
+            df.loc[i, f"ema_{window}"] = talib.EMA(
                 df["close"].iloc[: i + 1], timeperiod=i + 1
-            ).iloc[i]
+            ).iloc[-1]
+        df[f"ema_{window}"].fillna(df["close"].iloc[0], inplace=True)
         return df
 
     def add_skewness(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
@@ -261,12 +285,21 @@ class FeatureEngineer:
         window (int): The window size for the rolling skewness calculation.
 
         """
-        df["skewness"] = (
-            df["log_return"]
+        df.loc[:, "skewness"] = (
+            df["log_return_1"]
             .rolling(window=window)
             .apply(lambda x: x.skew(), raw=False)
-            .fillna(0)
         )
+        mean = df["skewness"].mean()
+        for i in range(window - 1):
+            df.loc[i, "skewness"] = (
+                df["log_return_1"]
+                .iloc[: i + 1]
+                .rolling(i + 1)
+                .apply(lambda x: x.skew(), raw=False)
+                .iloc[i]
+            )
+        df["skewness"].fillna(mean, inplace=True)
         return df
 
     def add_kurtosis(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
@@ -281,10 +314,19 @@ class FeatureEngineer:
         window (int): The window size for the rolling kurtosis calculation.
 
         """
-        df["kurtosis"] = (
-            df["log_return"]
+        df.loc[:, "kurtosis"] = (
+            df["log_return_1"]
             .rolling(window=window)
             .apply(lambda x: x.kurt(), raw=False)
-            .fillna(0)
         )
+        mean = df["kurtosis"].mean()
+        for i in range(window - 1):
+            df.loc[i, "kurtosis"] = (
+                df["log_return_1"]
+                .iloc[: i + 1]
+                .rolling(i + 1)
+                .apply(lambda x: x.kurt(), raw=False)
+                .iloc[i]
+            )
+        df["kurtosis"].fillna(mean, inplace=True)
         return df
