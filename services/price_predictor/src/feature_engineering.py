@@ -330,3 +330,32 @@ class FeatureEngineer:
             )
         df["kurtosis"].fillna(mean, inplace=True)
         return df
+
+    def add_temporal_features(
+        self, df: pd.DataFrame, timeperiod: int = 10
+    ) -> pd.DataFrame:
+        """Add temporal features based on bar end_time.
+
+        Purpose: Capture potential temporal patterns in the data.
+        E.g., hours where volatility is higher/lower.
+
+        Args:
+        ----
+        df (pd.DataFrame): The dataframe to process.
+        timeperiod (str): Temporal timeframe to compute temporal features on.
+
+        """
+        if timeperiod == "month day":
+            df.loc[:, "month_day"] = df["end_time"].dt.day
+        elif timeperiod == "week day":
+            df.loc[:, "weekday"] = df["end_time"].dt.dayofweek
+        elif timeperiod == "hour":
+            df.loc[:, "hour"] = df["end_time"].dt.hour
+        elif timeperiod == "minute":
+            df.loc[:, "minute"] = df["end_time"].dt.minute
+        else:
+            logger.error(
+                f"Temporal feature {timeperiod} not supported. "
+                "Supported temp. features:  month day, week day, hour, minute"
+            )
+        return df

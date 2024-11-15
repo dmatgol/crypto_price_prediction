@@ -1,3 +1,9 @@
+temporal_features:
+  - timeperiod: week day
+  - timeperiod: month day
+  - timeperiod: hour
+  - timeperiod: minute
+
 log_return:
   - n_bars: 1
   - n_bars: 5
