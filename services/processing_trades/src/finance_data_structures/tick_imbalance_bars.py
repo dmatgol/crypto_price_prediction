@@ -31,6 +31,9 @@ class TickImbalanceBars(FinanceDataStructure):
             "volume": 0,
             "start_time": timestamp,
             "end_time": timestamp,
+            "tick_imbalance": 0,
+            "ticks": 0,
+            "cumulative_trade_amount": 0,
         }
 
     def process_trade(
@@ -50,6 +53,9 @@ class TickImbalanceBars(FinanceDataStructure):
         high = state.get("high", default=0)
         low = state.get("low", default=99999999999)
         volume = state.get("volume", default=0)
+        cumulative_trade_amount = state.get(
+            "cumulative_trade_amount", default=0
+        )
 
         if trade["side"] == "buy":
             cumulative_imbalance += 1
@@ -60,7 +66,7 @@ class TickImbalanceBars(FinanceDataStructure):
         else:
             raise ValueError(f"Invalid trade side: {trade['side']}")
 
-        if abs(cumulative_imbalance) > self.threshold_intervals[product_id]:
+        if abs(cumulative_imbalance) >= self.threshold_intervals[product_id]:
             bar = self.get_bar(product_id)
             bar.update(
                 {
@@ -73,6 +79,12 @@ class TickImbalanceBars(FinanceDataStructure):
                     "end_time": trade["timestamp"],
                     "start_time": state.get("start_time"),
                     "tick_imbalance": cumulative_imbalance,
+                    "ticks": state.get("ticks_counter"),
+                    "cumulative_trade_amount": round(
+                        cumulative_trade_amount
+                        + trade["volume"] * trade["price"],
+                        4,
+                    ),
                 }
             )
             self.write_bar_to_topic(product_id, bar)
@@ -83,6 +95,7 @@ class TickImbalanceBars(FinanceDataStructure):
             state.set("high", 0)
             state.set("low", 99999999999)
             state.set("volume", 0)
+            state.set("cumulative_trade_amount", 0)
             self.bars[product_id] = self.initialize_bar(None, None, None)
 
         else:
@@ -94,5 +107,9 @@ class TickImbalanceBars(FinanceDataStructure):
             state.set("high", max(high, trade["price"]))
             state.set("low", min(low, trade["price"]))
             state.set("volume", volume + trade["volume"])
+            state.set(
+                "cumulative_trade_amount",
+                cumulative_trade_amount + trade["volume"] * trade["price"],
+            )
 
         return trade
