@@ -117,7 +117,11 @@ class PublishToFeatureStore:
                         )
                         buffer = []
                         last_saved_to_feature_store_ts = get_current_utc_sec()
-                    continue
+                    if not buffer and (
+                        sec_since_last_saved >= self.save_every_n_sec
+                    ):
+                        logger.info("No messages received. Exiting.")
+                        return
                 if msg.error():
                     logger.error("Kafka error:", format(msg.error()))
                 else:

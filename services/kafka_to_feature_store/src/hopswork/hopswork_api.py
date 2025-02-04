@@ -60,6 +60,7 @@ def push_data_to_feature_store(
         return int(timestamp.timestamp() * 1000)
 
     df["end_timestamp_unix"] = df["end_time"].apply(iso_to_unix)
+    df["start_timestamp_unix"] = df["start_time"].apply(iso_to_unix)
     df = df.assign(
         start_time=pd.to_datetime(df["start_time"], utc=True),
         end_time=pd.to_datetime(df["end_time"], utc=True),
@@ -116,6 +117,7 @@ def deserialize_timestamps(timestamps_str: str):
     Args:
     ----
     timestamps_str (str): The timestamps string to deserialize.
+
     """
     return json.loads(timestamps_str)
 
@@ -126,5 +128,6 @@ def serialize_timestamps(timestamps_list: list[str]):
     Args:
     ----
     timestamps_list (list[str]): The timestamps string to deserialize.
+
     """
     return json.dumps(timestamps_list)

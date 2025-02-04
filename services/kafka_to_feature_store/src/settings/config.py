@@ -21,7 +21,7 @@ class AppSettings(BaseSettings):
     buffer_size: int = 1
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="services/kafka_to_feature_store/.env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -34,7 +34,7 @@ class HopsworkSettings(BaseSettings):
     api_key: str
 
     model_config = SettingsConfigDict(
-        env_file="credentials.env",
+        env_file="services/kafka_to_feature_store/credentials.env",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     save_every_n_sec: int
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file="services/kafka_to_feature_store/.env",
         extra="ignore",
     )
 
