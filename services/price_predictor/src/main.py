@@ -75,15 +75,15 @@ def main(
     X_train = feature_engineer_train.add_features()
 
     logger.info("Generating predictions with moving average baseline model.")
-    ma = MovingAverageBaseline(window_size=10)
-    baseline_predictions = ma.predict(X_test)
+    ma = MovingAverageBaseline(
+        window_size=10, prediction_horizon=prediction_window_tick
+    )
+    baseline_predictions = ma.predict(X_test, X_train)
     mae_pct_change = mean_absolute_error(y_test, baseline_predictions)
     logger.info(f"Mean Absolute Error: {mae_pct_change}")
 
     logger.info("Generating predictions with simple baseline model.")
-    simple_baseline = TrainMeanPctChangeBaseline(
-        mean_pct_change=X_train["pct_change"].mean()
-    )
+    simple_baseline = TrainMeanPctChangeBaseline()
     baseline_predictions = simple_baseline.predict(X_test)
     mae_pct_change = mean_absolute_error(y_test, baseline_predictions)
     logger.info(f"Mean Absolute Error: {mae_pct_change}")
@@ -129,10 +129,14 @@ def create_target_variable(
 
     """
     ohlc_data["pct_change"] = (
-        ohlc_data["close"].pct_change(periods=prediction_window_tick) * 100
+        ohlc_data.groupby("product_id")["close"].pct_change(
+            periods=prediction_window_tick
+        )
+        * 100
     )
-    ohlc_data["target"] = ohlc_data["pct_change"].shift(-prediction_window_tick)
-
+    ohlc_data["target"] = ohlc_data.groupby("product_id")["pct_change"].shift(
+        -prediction_window_tick
+    )
     return ohlc_data.dropna(subset=["target"])
 
 
