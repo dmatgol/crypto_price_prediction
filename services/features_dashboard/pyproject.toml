@@ -8,7 +8,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
 streamlit = "^1.38.0"
-hopsworks = "^3.7.0"
+hopsworks = "==4.1.*"
 pydantic = "^2.9.2"
 pydantic-settings = "^2.5.2"
 bokeh = "2.4.3"

@@ -1,8 +1,15 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import hopsworks
 import pandas as pd
 from settings.config import settings
+
+project = hopsworks.login(
+    project=settings.hopswork.project_name,
+    api_key_value=settings.hopswork.api_key,
+)
+
+fs = project.get_feature_store()
 
 
 def get_features_from_the_store(
@@ -31,13 +38,6 @@ def get_features_from_the_store(
     pd.DataFrame: The features as a dataframe.
 
     """
-    project = hopsworks.login(
-        project=settings.hopswork.project_name,
-        api_key_value=settings.hopswork.api_key,
-    )
-
-    fs = project.get_feature_store()
-
     feature_group = fs.get_feature_group(
         name=feature_group_name,
         version=feature_group_version,
@@ -60,3 +60,14 @@ def get_features_from_the_store(
     )
     features = features[time_filter & product_id_filter]
     return features
+
+
+if __name__ == "__main__":
+    get_features_from_the_store(
+        "ohlc_feature_group",
+        1,
+        "ohlc_feature_view",
+        1,
+        (datetime.now() - timedelta(days=20), datetime.now()),
+        "BTC-USD",
+    )
