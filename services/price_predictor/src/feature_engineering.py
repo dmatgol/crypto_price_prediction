@@ -47,20 +47,32 @@ class FeatureEngineer:
             return yaml.safe_load(file)
 
     def add_features(self) -> pd.DataFrame:
-        """Add features to the df based on the configuration dictionary."""
+        """Add features aggregated per product_id."""
         df = self.df.copy()
+
+        # Group by product_id and apply features to each group separately.
+        df_grouped = df.groupby("product_id", group_keys=False).apply(
+            self._apply_features_to_group
+        )
+
+        return df_grouped
+
+    def _apply_features_to_group(self, group: pd.DataFrame) -> pd.DataFrame:
+        """Apply all feature methods defined in the config per product_id."""
         for feature_name, parms in self.config.items():
             method_name = f"add_{feature_name}"
             method = getattr(self, method_name, None)
             if method:
                 if isinstance(parms, list):
                     for param in parms:
-                        df = method(df, **param) if parms else method(df)
+                        group = (
+                            method(group, **param) if parms else method(group)
+                        )
                 else:
-                    df = method(df, **parms) if parms else method(df)
+                    group = method(group, **parms) if parms else method(group)
             else:
                 logger.debug(f"Method {method_name} not found.")
-        return df
+        return group
 
     def add_log_return(self, df: pd.DataFrame, n_bars: int) -> pd.DataFrame:
         """Add log return feature to the dataframe.

@@ -9,13 +9,13 @@ from tools.settings import SupportedCoins  # isort: skip
 from models.baseline_models import MovingAverageBaseline  # isort: skip
 from models.baseline_models import TrainMeanPctChangeBaseline  # isort: skip
 
-FEATURE_ENGINEER_CONFIG = "services/price_predictor/src/configs/config.yaml"
+FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
 
 
 def main(
     feature_view_name: str,
     feature_view_version: int,
-    product_id: str,
+    product_id: list[str],
     last_n_days_to_fetch_from_store: int,
     last_n_days_to_test_model: int,
     prediction_window_tick: int,
@@ -144,8 +144,8 @@ if __name__ == "__main__":
     main(
         feature_view_name="ohlc_feature_view",
         feature_view_version=1,
-        product_id=SupportedCoins.BTC_USD.value,
-        last_n_days_to_fetch_from_store=30,
-        last_n_days_to_test_model=2,
+        product_id=[SupportedCoins.BTC_USD.value, SupportedCoins.ETH_USD.value],
+        last_n_days_to_fetch_from_store=90,
+        last_n_days_to_test_model=30,
         prediction_window_tick=1,
     )
