@@ -1,12 +1,11 @@
-from datetime import datetime, timezone
+import time
 
 import hopsworks
 import pandas as pd
 from hsfs.feature_store import FeatureStore
 from hsfs.feature_view import FeatureView
-from loguru import logger
 
-from tools.settings import SupportedCoins, settings
+from tools.settings import settings
 
 
 class OhlcDataReader:
@@ -75,29 +74,25 @@ class OhlcDataReader:
 
     def read_from_offline_store(
         self,
-        product_id: str,
+        product_id: list[str],
         last_n_days: int,
     ) -> pd.DataFrame:
-        """Read OHLC data from the offline feature store for the given product_id.
+        """Read OHLC data from the offline feature store.
 
         Args:
         ----
-        product_id: The product_id to read data for.
+        product_id: The list of product_id(s) to read data for.
         last_n_days: The number of days to read data for.
 
         """
-        current_utc_timestamp = datetime.now(timezone.utc).timestamp()
-        to_timestamp_ms = int(current_utc_timestamp * 1000)
+        to_timestamp_ms = int(time.time() * 1000)
         from_timestamp_ms = to_timestamp_ms - last_n_days * 24 * 60 * 60 * 1000
 
         feature_view = self._get_feature_view()
         features = feature_view.get_batch_data()
 
-        to_datetime = datetime.fromtimestamp(to_timestamp_ms / 1000)
-        from_datetime = datetime.fromtimestamp(from_timestamp_ms / 1000)
-        logger.info(f"Reading data from {from_datetime} to {to_datetime}")
         # filter the features for the given product_id and time range
-        features = features[features["product_id"] == product_id]
+        features = features[features["product_id"].isin(product_id)]
         features = features[features["end_timestamp_unix"] >= from_timestamp_ms]
         features = features[features["end_timestamp_unix"] <= to_timestamp_ms]
         # sort the features by timestamp (ascending)
@@ -115,21 +110,3 @@ class OhlcDataReader:
         )
 
         return project.get_feature_store()
-
-
-if __name__ == "__main__":
-
-    ohlc_data_reader = OhlcDataReader(
-        feature_view_name="ohlc_feature_view",
-        feature_view_version=1,
-        feature_group_name="ohlc_feature_group",
-        feature_group_version=1,
-    )
-
-    # check if reading from the offline store works
-    output = ohlc_data_reader.read_from_offline_store(
-        product_id=SupportedCoins.BTC_USD.value,
-        last_n_days=90,
-    )
-    logger.debug(f"Historical OHLC data: {output}")
-    output.to_csv("ohlc_data.csv", index=False)
