@@ -1,15 +1,13 @@
 import pandas as pd
+from evaluation import ModelTester
 from feature_engineering import FeatureEngineer
-from sklearn.metrics import mean_absolute_error
 
-from tools.logging_config import logger  # isort: skip
-from tools.ohlc_data_reader import OhlcDataReader  # isort: skip
-from tools.settings import SupportedCoins  # isort: skip
-
-from models.baseline_models import MovingAverageBaseline  # isort: skip
-from models.baseline_models import TrainMeanPctChangeBaseline  # isort: skip
+from tools.logging_config import logger
+from tools.ohlc_data_reader import OhlcDataReader
+from tools.settings import SupportedCoins
 
 FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
+BASELINE_MODEL_CONFIG = "src/configs/baseline_config.yaml"
 
 
 def main(
@@ -75,18 +73,13 @@ def main(
     X_train = feature_engineer_train.add_features()
 
     logger.info("Generating predictions with moving average baseline model.")
-    ma = MovingAverageBaseline(
-        window_size=10, prediction_horizon=prediction_window_tick
+    model_tester = ModelTester(
+        baseline_config_path=BASELINE_MODEL_CONFIG,
     )
-    baseline_predictions = ma.predict(X_test, X_train)
-    mae_pct_change = mean_absolute_error(y_test, baseline_predictions)
-    logger.info(f"Mean Absolute Error: {mae_pct_change}")
-
-    logger.info("Generating predictions with simple baseline model.")
-    simple_baseline = TrainMeanPctChangeBaseline()
-    baseline_predictions = simple_baseline.predict(X_test)
-    mae_pct_change = mean_absolute_error(y_test, baseline_predictions)
-    logger.info(f"Mean Absolute Error: {mae_pct_change}")
+    x_train_mean = X_train["pct_change"].mean()
+    model_tester.test_baseline_model(
+        X_test=X_test, y_test=y_test, pct_change_train_mean=x_train_mean
+    )
 
 
 def temporal_train_test_split(
@@ -134,6 +127,7 @@ def create_target_variable(
         )
         * 100
     )
+    ohlc_data.loc[:, "pct_change"].fillna(0, inplace=True)
     ohlc_data["target"] = ohlc_data.groupby("product_id")["pct_change"].shift(
         -prediction_window_tick
     )

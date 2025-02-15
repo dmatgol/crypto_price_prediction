@@ -9,15 +9,36 @@ class TrainMeanPctChangeBaseline:
     train data.
     """
 
-    def predict(self, df: pd.DataFrame) -> pd.DataFrame:
+    def __init__(self, prediction_horizon: int = 1) -> None:
+        """Initialize Train pct change mean baseline.
+
+        Args:
+        ----
+        train_mean (float): Mean of close price pct change on train data.
+        prediction_horizon (int): Number of steps to forecast ahead.
+
+        """
+        self.prediction_horizon = prediction_horizon
+
+    def set_train_mean(self, pct_change_train_mean: float) -> None:
+        """Set the mean pct change of the train data.
+
+        Args:
+        ----
+        pct_change_train_mean (float): Mean pct change of the train data.
+
+        """
+        self.pct_change_train_mean = pct_change_train_mean
+
+    def predict(self, test_df: pd.DataFrame) -> pd.DataFrame:
         """Predict based on the mean pct change seen in train data."""
-        df_ = df.copy()
-        df_["prediction"] = df_["pct_change"].mean()
-        return df_["prediction"]
+        df_ = test_df.copy()
+        df_[f"forecast_{self.prediction_horizon}"] = self.pct_change_train_mean
+        return df_
 
 
 class MovingAverageBaseline:
-    """Simple Moving Average (SMA) baseline."""
+    """Enhanced Moving Average (SMA) baseline using only test data."""
 
     def __init__(self, window_size: int, prediction_horizon: int = 1):
         """Initialize moving average baseline model.
@@ -25,124 +46,75 @@ class MovingAverageBaseline:
         Args:
         ----
         window_size (int): Size of the moving average window.
-        prediction_horizon (int): Prediction horizon.
+        prediction_horizon (int): Number of steps to forecast ahead.
 
         """
         self.window_size = window_size
         self.prediction_horizon = prediction_horizon
 
-    def predict(
-        self, test_df: pd.DataFrame, train_df: pd.DataFrame
-    ) -> pd.DataFrame:
-        """Predict the moving average of the closing price.
+    def predict(self, test_df: pd.DataFrame) -> pd.Series:
+        """Generate moving average predictions using only test data.
 
         Args:
         ----
-        test_df (pd.DataFrame): The dataframe to predict on.
-        train_df (pd.DataFrame): The train dataframe to use for the initial n
-        steps, where n < self.window_size to ensure that we have enough data.
+        test_df (pd.DataFrame): DataFrame containing test data.
 
         """
-        forecasted_results = []
+        test_df = test_df.copy()
 
-        # Process each product_id separately.
         for product in test_df["product_id"].unique():
-            # Get train and test data for the product, sorted by time.
-            train_prod = train_df[
-                train_df["product_id"] == product
-            ].sort_values("start_time")
-            test_prod = test_df[test_df["product_id"] == product].sort_values(
+            product_df = test_df[test_df["product_id"] == product].sort_values(
                 "start_time"
             )
+            product_df = self._compute_forecasts(product_df)
 
-            # Take the most recent 'window' rows from train as the seed.
-            seed = train_prod.tail(self.window_size)
-
-            # Concatenate seed and test data.
-            combined = pd.concat([seed, test_prod]).sort_values("start_time")
-
-            # Compute forecasts on the combined DataFrame.
-            combined_with_forecasts = self.compute_forecasts_for_group(combined)
-
-            # Drop the seed rows. We drop the first 'window' rows from the
-            # combined DataFrame.
-            forecast_for_test = combined_with_forecasts.iloc[self.window_size :]
-            forecasted_results.append(forecast_for_test)
-
-        forecasted_df = pd.concat(forecasted_results)
-        return forecasted_df[f"forecast_{self.prediction_horizon}"]
-
-    def compute_forecasts_for_group(
-        self,
-        group: pd.DataFrame,
-    ) -> pd.DataFrame:
-        """Compute an iterative forecast (of horizon n_forecast).
-
-        For each row in the group, compute an iterative forecast
-        (of horizon n_forecast) based on all historical pct_change values up to
-        that time. The forecasts for each row will be stored in new columns:
-        forecast_1, forecast_2, ...
-
-        Args:
-        ----
-        group (pd.Series): Pandas DataFrame with historical close prices.
-
-        """
-        group = group.copy()
-        # Create empty lists to hold forecasts for each horizon.
-        forecast_data: dict[str, list[float]] = {
-            f"forecast_{i + 1}": [] for i in range(self.prediction_horizon)
-        }
-
-        # Iterate over the DataFrame rows in order.
-        for idx in group.index:
-            # Get historical close prices from the start up to and including
-            # the current row. Assumes the DataFrame is sorted by time.
-            historical = group.loc[:idx, "close"]
-            # Compute the iterative forecast.
-            forecasts = self.iterative_forecast_for_row(historical)
-            # Save each forecast.
-            for i in range(self.prediction_horizon):
-                pct_change = (
-                    (group.loc[idx, "close"] - forecasts[i])
-                    / group.loc[idx, "close"]
-                    * 100
+            # Update the original test_df with the forecast columns
+            for h in range(1, self.prediction_horizon + 1):
+                test_df.loc[product_df.index, f"close_forecast_{h}"] = (
+                    product_df[f"close_forecast_{h}"]
                 )
-                forecast_data[f"forecast_{i + 1}"].append(pct_change)
+                test_df.loc[product_df.index, f"forecast_{h}"] = product_df[
+                    f"forecast_{h}"
+                ]
 
-        # Append the forecast columns to the group DataFrame.
-        for col, values in forecast_data.items():
-            group[col] = values
-        return group
+        return test_df
 
-    def iterative_forecast_for_row(self, historical: pd.Series) -> list[float]:
-        """Forecast n steps into the future for each row element.
-
-        Given a sequence of historical close prices, forecast n_forecast future
-        values.
-        The forecast procedure is:
-        - For the first forecast, use the average of the last `window` values
-        (or all if fewer).
-        - Append that forecast to the history and compute the next forecast
-        using the last `window` values.
-
-        Args:
-        ----
-        historical (pd.Series): Pandas Series with historical close prices.
-
-        """
-        hist = list(historical)  # convert to list
+    def _compute_forecasts(self, group: pd.DataFrame) -> pd.DataFrame:
+        """Compute forecasts for a single product group."""
+        group = group.copy()
+        close_prices = group["close"].values
         forecasts = []
-        for _ in range(self.prediction_horizon):
-            # Get last n historical values
-            window_data = (
-                hist[-self.window_size :]
-                if len(hist) >= self.window_size
-                else hist
+
+        for i in range(len(close_prices)):
+            # Get available history up to current index
+            available_data = close_prices[
+                max(0, i - self.window_size + 1) : i + 1
+            ]
+
+            # Compute base forecast
+            if len(available_data) == 0:
+                base_forecast = close_prices[i]  # Fallback to current price
+            else:
+                base_forecast = np.mean(available_data)
+
+            # Generate multi-step forecasts
+            horizon_forecasts = [base_forecast]
+            for _ in range(1, self.prediction_horizon):
+                available_data = np.append(
+                    available_data, horizon_forecasts[-1]
+                )
+                available_data = available_data[-self.window_size :]
+                horizon_forecasts.append(np.mean(available_data))
+
+            forecasts.append(horizon_forecasts)
+
+        # Add forecasts to dataframe
+        for h in range(self.prediction_horizon):
+            group[f"close_forecast_{h + 1}"] = [f[h] for f in forecasts]
+            group[f"forecast_{h + 1}"] = (
+                (group[f"close_forecast_{h + 1}"] - group["close"])
+                / group["close"]
+                * 100
             )
-            # Forecast close price as mean of last window values
-            forecast = np.mean(window_data) if window_data else np.nan
-            forecasts.append(forecast)
-            # Update history with the forecast for the next iteration
-            hist.append(forecast)
-        return forecasts
+
+        return group
