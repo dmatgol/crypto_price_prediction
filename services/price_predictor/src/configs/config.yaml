@@ -8,14 +8,14 @@ log_return:
   - n_bars: 1
   - n_bars: 5
 
-# rsi_indicator:
-#   rsi_timeperiod: 14
+rsi_indicator:
+ rsi_timeperiod: 14
 
-# momentum_indicator:
-#   momentum_timeperiod: 14
+momentum_indicator:
+  momentum_timeperiod: 14
 
-# volatility_indicator:
-#   volatility_timeperiod: 14
+volatility_indicator:
+  volatility_timeperiod: 14
 
 cumulative_price_change: {}
 high_low_pct_range: {}
@@ -25,11 +25,11 @@ accumulation_distribution_index: {}
 moving_average:
   window: 3
 
-# ema:
-#   window: 10
+ema:
+  window: 10
 
-# skewness:
-#   window: 10
+skewness:
+  window: 10
 
-# kurtosis:
-#   window: 10
+kurtosis:
+  window: 10

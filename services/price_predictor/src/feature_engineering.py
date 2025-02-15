@@ -59,6 +59,7 @@ class FeatureEngineer:
 
     def _apply_features_to_group(self, group: pd.DataFrame) -> pd.DataFrame:
         """Apply all feature methods defined in the config per product_id."""
+        group = group.reset_index(drop=True)
         for feature_name, parms in self.config.items():
             method_name = f"add_{feature_name}"
             method = getattr(self, method_name, None)
@@ -108,12 +109,12 @@ class FeatureEngineer:
         )
         # Progressive filling - assume a minimum of 7 data points
         # otherwise rsi will be always very high.
-        mean = df[f"rsi_{rsi_timeperiod}"].mean()
+
         for i in range(7, rsi_timeperiod):
             df.loc[i, f"rsi_{rsi_timeperiod}"] = talib.RSI(
                 df["close"].iloc[: i + 1], timeperiod=i
             ).iloc[-1]
-        df.loc[:, f"rsi_{rsi_timeperiod}"].fillna(mean, inplace=True)
+        df.loc[:, f"rsi_{rsi_timeperiod}"].fillna(50, inplace=True)
         return df
 
     def add_momentum_indicator(
@@ -302,7 +303,6 @@ class FeatureEngineer:
             .rolling(window=window)
             .apply(lambda x: x.skew(), raw=False)
         )
-        mean = df["skewness"].mean()
         for i in range(window - 1):
             df.loc[i, "skewness"] = (
                 df["log_return_1"]
@@ -311,7 +311,7 @@ class FeatureEngineer:
                 .apply(lambda x: x.skew(), raw=False)
                 .iloc[i]
             )
-        df["skewness"].fillna(mean, inplace=True)
+        df["skewness"].fillna(0, inplace=True)
         return df
 
     def add_kurtosis(self, df: pd.DataFrame, window: int = 10) -> pd.DataFrame:
@@ -331,7 +331,6 @@ class FeatureEngineer:
             .rolling(window=window)
             .apply(lambda x: x.kurt(), raw=False)
         )
-        mean = df["kurtosis"].mean()
         for i in range(window - 1):
             df.loc[i, "kurtosis"] = (
                 df["log_return_1"]
@@ -340,7 +339,7 @@ class FeatureEngineer:
                 .apply(lambda x: x.kurt(), raw=False)
                 .iloc[i]
             )
-        df["kurtosis"].fillna(mean, inplace=True)
+        df["kurtosis"].fillna(3, inplace=True)
         return df
 
     def add_temporal_features(
