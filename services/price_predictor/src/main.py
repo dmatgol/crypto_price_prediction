@@ -8,6 +8,7 @@ from tools.settings import SupportedCoins
 
 FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
 BASELINE_MODEL_CONFIG = "src/configs/baseline_config.yaml"
+CHALLENGER_MODEL_CONFIG = "src/configs/challenger_config.yaml"
 
 
 def main(
@@ -64,21 +65,30 @@ def main(
     )
 
     # Split into features and target for each set
-    X_train, _ = train_df.drop("target", axis=1), train_df["target"]
+    X_train, y_train = train_df.drop("target", axis=1), train_df["target"]
     X_test, y_test = test_df.drop("target", axis=1), test_df["target"]
 
     # Add Features based on some feature engineering
     logger.info("Feature engineering pipeline.")
-    feature_engineer_train = FeatureEngineer(X_train, FEATURE_ENGINEER_CONFIG)
-    X_train = feature_engineer_train.add_features()
+    feature_engineering = FeatureEngineer(FEATURE_ENGINEER_CONFIG)
+    X_train_features = feature_engineering.add_features(X_train)
+    X_test_features = feature_engineering.add_features(X_test)
 
     logger.info("Generating predictions with moving average baseline model.")
     model_tester = ModelTester(
         baseline_config_path=BASELINE_MODEL_CONFIG,
+        challenger_config_path=CHALLENGER_MODEL_CONFIG,
     )
-    x_train_mean = X_train["pct_change"].mean()
+    x_train_mean = X_train_features["pct_change"].mean()
     model_tester.test_baseline_model(
         X_test=X_test, y_test=y_test, pct_change_train_mean=x_train_mean
+    )
+    model_tester.test_challenger_model(
+        X_train=X_train_features,
+        y_train=y_train,
+        X_test=X_test_features,
+        y_test=y_test,
+        boosting_rounds=100,
     )
 
 

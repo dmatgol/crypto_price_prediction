@@ -5,5 +5,4 @@ models:
       prediction_horizon: 1
   - model: TrainMeanPctChangeBaseline
     model_args:
-      window_size: 10
       prediction_horizon: 1

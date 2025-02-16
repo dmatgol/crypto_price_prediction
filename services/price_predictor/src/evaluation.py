@@ -1,7 +1,9 @@
 from typing import Any
 
+import numpy as np
 import pandas as pd
 import yaml
+from models.shallow_models import MultiLinearRegression, XGBoostModel
 from sklearn.metrics import mean_absolute_error
 
 from tools.logging_config import logger  # isort: skip
@@ -12,6 +14,8 @@ from models.baseline_models import TrainMeanPctChangeBaseline  # isort: skip
 MODEL_CLASSES = {
     "MovingAverageBaseline": MovingAverageBaseline,
     "TrainMeanPctChangeBaseline": TrainMeanPctChangeBaseline,
+    "XGBoostModel": XGBoostModel,
+    "MultiLinearRegression": MultiLinearRegression,
 }
 
 
@@ -60,11 +64,17 @@ class ModelTester:
             self.test_model(model_name, model, X_test, y_test, **kwargs)
 
     def test_challenger_model(
-        self, X_test: pd.DataFrame, y_test: pd.Series, **kwargs
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.Series,
+        X_test: pd.DataFrame,
+        y_test: pd.Series,
+        **kwargs,
     ) -> None:
         """Test challenger models."""
         logger.info("Testing Challenger Models")
         for model_name, model in self.challenger_model.items():
+            model.train(X_train, y_train, **kwargs)
             self.test_model(model_name, model, X_test, y_test, **kwargs)
 
     def test_model(
@@ -96,3 +106,8 @@ class ModelTester:
             y_test, predictions[f"forecast_{prediction_horizon}"]
         )
         logger.info(f"{model_name} Mean Absolute Error: {mae}")
+        mean_abs_target = np.mean(np.abs(y_test))
+        mape = (mae / mean_abs_target) * 100
+        logger.info(
+            f"{model_name} Mean Absolute Percentage Error (MAPE): {mape:.2f}%"
+        )

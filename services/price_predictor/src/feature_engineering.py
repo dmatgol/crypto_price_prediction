@@ -16,7 +16,6 @@ class FeatureEngineer:
 
     def __init__(
         self,
-        df: pd.DataFrame,
         config_path: str | None = None,
         config: dict[str, Any] | None = None,
     ) -> None:
@@ -29,7 +28,6 @@ class FeatureEngineer:
         config (dict[str, Any]): The configuration for the feature engineer.
 
         """
-        self.df = df
         # Load configuration from either a file or a dictionary
         if config is not None:
             self.config = config
@@ -46,15 +44,23 @@ class FeatureEngineer:
         with open(config_path) as file:
             return yaml.safe_load(file)
 
-    def add_features(self) -> pd.DataFrame:
+    def add_features(
+        self,
+        df: pd.DataFrame,
+    ) -> pd.DataFrame:
         """Add features aggregated per product_id."""
-        df = self.df.copy()
+        df = df.copy()
 
         # Group by product_id and apply features to each group separately.
         df_grouped = df.groupby("product_id", group_keys=False).apply(
             self._apply_features_to_group
         )
-
+        df_grouped = df_grouped.drop(
+            ["start_time", "end_time"], axis=1
+        ).dropna()
+        df_grouped["product_id"] = df_grouped["product_id"].astype("category")
+        logger.info("Features added.")
+        logger.info(f"Using the following features:\n {df_grouped.columns}")
         return df_grouped
 
     def _apply_features_to_group(self, group: pd.DataFrame) -> pd.DataFrame:
@@ -73,6 +79,7 @@ class FeatureEngineer:
                     group = method(group, **parms) if parms else method(group)
             else:
                 logger.debug(f"Method {method_name} not found.")
+
         return group
 
     def add_log_return(self, df: pd.DataFrame, n_bars: int) -> pd.DataFrame:

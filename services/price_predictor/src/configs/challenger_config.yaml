@@ -1,0 +1,14 @@
+models:
+  - model: MultiLinearRegression
+    model_args:
+      prediction_horizon: 1
+  - model: XGBoostModel
+    model_args:
+      prediction_horizon: 1
+      learning_rate: 0.05
+      max_depth: 6
+      min_child_weight: 3
+      subsample: 0.8
+      colsample_bytree: 0.8
+      gamma: 0.1
+      objective: reg:pseudohubererror
