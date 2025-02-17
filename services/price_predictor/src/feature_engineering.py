@@ -50,18 +50,19 @@ class FeatureEngineer:
     ) -> pd.DataFrame:
         """Add features aggregated per product_id."""
         df = df.copy()
-
+        df["original_index"] = df.index
         # Group by product_id and apply features to each group separately.
         df_grouped = df.groupby("product_id", group_keys=False).apply(
             self._apply_features_to_group
         )
+        df_grouped = df_grouped.set_index("original_index")
         df_grouped = df_grouped.drop(
             ["start_time", "end_time"], axis=1
         ).dropna()
         df_grouped["product_id"] = df_grouped["product_id"].astype("category")
         logger.info("Features added.")
         logger.info(f"Using the following features:\n {df_grouped.columns}")
-        return df_grouped
+        return df_grouped.sort_index()
 
     def _apply_features_to_group(self, group: pd.DataFrame) -> pd.DataFrame:
         """Apply all feature methods defined in the config per product_id."""
@@ -79,7 +80,6 @@ class FeatureEngineer:
                     group = method(group, **parms) if parms else method(group)
             else:
                 logger.debug(f"Method {method_name} not found.")
-
         return group
 
     def add_log_return(self, df: pd.DataFrame, n_bars: int) -> pd.DataFrame:
