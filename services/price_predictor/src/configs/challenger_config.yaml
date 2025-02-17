@@ -11,4 +11,5 @@ models:
       subsample: 0.8
       colsample_bytree: 0.8
       gamma: 0.1
+      num_boost_round: 100
       objective: reg:pseudohubererror

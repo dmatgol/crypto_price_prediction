@@ -1,10 +1,12 @@
 import pandas as pd
-from evaluation import ModelTester
+from comet_ml import Experiment
 from feature_engineering import FeatureEngineer
+from train_evaluation import Evaluator, Trainer
+from utils import compare_models, load_models, log_model_results
 
 from tools.logging_config import logger
 from tools.ohlc_data_reader import OhlcDataReader
-from tools.settings import SupportedCoins
+from tools.settings import SupportedCoins, settings
 
 FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
 BASELINE_MODEL_CONFIG = "src/configs/baseline_config.yaml"
@@ -39,6 +41,22 @@ def main(
     prediction_window_tick: The prediction window tick into the future.
 
     """
+    # Create experiment to log metadata to CometML
+    experiment = Experiment(
+        api_key=settings.comet_ml.api_key,
+        project_name=settings.comet_ml.project_name,
+        workspace=settings.comet_ml.workspace,
+    )
+    experiment.log_parameters(
+        {
+            "feature_view_name": feature_view_name,
+            "feature_view_version": feature_view_version,
+            "product_id": product_id,
+            "last_n_days_to_fetch_from_store": last_n_days_to_fetch_from_store,
+            "last_n_days_to_test_model": last_n_days_to_test_model,
+            "prediction_window_tick": prediction_window_tick,
+        }
+    )
     # Step 1 - Fetch OHLC data
     ohlc_data_reader = OhlcDataReader(
         feature_view_name=feature_view_name,
@@ -48,11 +66,14 @@ def main(
         product_id=product_id,
         last_n_days=last_n_days_to_fetch_from_store,
     )
+    experiment.log_dataset_hash(ohlc_data)
 
     logger.info("Splitting data into train and test sets.")
     train_df, test_df = temporal_train_test_split(
         ohlc_data, last_n_days_to_test_model=last_n_days_to_test_model
     )
+    experiment.log_metric("n_rows_train", train_df.shape[0])
+    experiment.log_metric("n_rows_test", test_df.shape[0])
 
     logger.info("Creating target variable for trainset.")
     train_df = create_target_variable(train_df, prediction_window_tick)
@@ -63,7 +84,7 @@ def main(
         f"Train: {train_df["product_id"].count()}\n"
         f"Test: {test_df["product_id"].count()}\n"
     )
-
+    # log_target_distribution(train_df, test_df, experiment)
     # Split into features and target for each set
     X_train, y_train = train_df.drop("target", axis=1), train_df["target"]
     X_test, y_test = test_df.drop("target", axis=1), test_df["target"]
@@ -73,22 +94,58 @@ def main(
     feature_engineering = FeatureEngineer(FEATURE_ENGINEER_CONFIG)
     X_train_features = feature_engineering.add_features(X_train)
     X_test_features = feature_engineering.add_features(X_test)
+    experiment.log_metric("X_train_shape", X_train_features.shape)
+    experiment.log_metric("y_train_shape", y_train.shape)
+    experiment.log_metric("X_test_shape", X_test_features.shape)
+    experiment.log_metric("y_test_shape", y_test.shape)
 
-    logger.info("Generating predictions with moving average baseline model.")
-    model_tester = ModelTester(
-        baseline_config_path=BASELINE_MODEL_CONFIG,
-        challenger_config_path=CHALLENGER_MODEL_CONFIG,
+    logger.info("Evaluating performance of baseline models")
+    baseline_models = load_models(BASELINE_MODEL_CONFIG)
+
+    logger.info("Evaluating baseline models")
+    baseline_trainer = Trainer(baseline_models)
+    trained_baselines = baseline_trainer.train_all_models(
+        X_train,
+        y_train,
+        pct_change_train_mean=(
+            X_train["pct_change"].mean() if "pct_change" in X_train else 0
+        ),
     )
-    x_train_mean = X_train_features["pct_change"].mean()
-    model_tester.test_baseline_model(
-        X_test=X_test, y_test=y_test, pct_change_train_mean=x_train_mean
+    evaluator = Evaluator(metrics=["MAE", "MAPE"])
+    baseline_metrics_train = evaluator.evaluate_all_models(
+        trained_baselines, X_train, y_train
     )
-    model_tester.test_challenger_model(
-        X_train=X_train_features,
-        y_train=y_train,
-        X_test=X_test_features,
-        y_test=y_test,
-        boosting_rounds=100,
+    logger.info(f"Train Baseline metrics: {baseline_metrics_train}")
+    baseline_metrics_test = evaluator.evaluate_all_models(
+        trained_baselines, X_test, y_test
+    )
+    logger.info(f"Test Baseline metrics: {baseline_metrics_test}")
+    log_model_results("TEST", baseline_metrics_test, experiment)
+    best_baseline = compare_models(baseline_metrics_test, "MAPE")
+    logger.info(
+        f"Best baseline by MAPE = {best_baseline} with "
+        f"{baseline_metrics_test[best_baseline]}"
+    )
+
+    logger.info("Evaluating the performance of challenger models")
+    challenger_models = load_models(CHALLENGER_MODEL_CONFIG)
+    challenger_trainer = Trainer(challenger_models)
+    trained_challengers = challenger_trainer.train_all_models(
+        X_train_features, y_train
+    )
+    challenger_metrics_train = evaluator.evaluate_all_models(
+        trained_challengers, X_train_features, y_train
+    )
+    logger.info(f"Train Challenger metrics: {challenger_metrics_train}")
+    challenger_metrics_test = evaluator.evaluate_all_models(
+        trained_challengers, X_test_features, y_test
+    )
+    logger.info(f"Test Challenger metrics: {challenger_metrics_test}")
+    log_model_results("TEST", challenger_metrics_test, experiment)
+    best_challenger = compare_models(challenger_metrics_test, "MAPE")
+    logger.info(
+        f"Best challenger by MAPE = {best_challenger} with "
+        f"{challenger_metrics_test[best_challenger]}"
     )
 
 

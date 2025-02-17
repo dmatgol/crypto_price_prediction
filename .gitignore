@@ -153,3 +153,6 @@ state/
 
 # Notebook
 *.ipynb
+
+# csv files
+*.csv

@@ -47,6 +47,22 @@ class HopsworkSettings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".credentials.env",
+        env_prefix="HOPSWORKS__",
+        env_nested_delimiter="__",
+        extra="ignore",
+    )
+
+
+class CometMLSettings(BaseSettings):
+    """Database settings."""
+
+    project_name: str
+    api_key: str
+    workspace: str
+
+    model_config = SettingsConfigDict(
+        env_file=".credentials.env",
+        env_prefix="COMET_ML__",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -57,6 +73,7 @@ class Settings(BaseSettings):
 
     app_settings: AppSettings = AppSettings()
     hopswork: HopsworkSettings = HopsworkSettings()
+    comet_ml: CometMLSettings = CometMLSettings()
 
     features_configuration: str = "src/config/features.yaml"
 

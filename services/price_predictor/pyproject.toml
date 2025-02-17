@@ -15,6 +15,7 @@ ta-lib = "^0.4.32"
 lightgbm = "^4.5.0"
 hopsworks = {extras = ["python"], version = "^4.1.5"}
 xgboost = "^2.1.4"
+comet-ml = "^3.49.0"
 
 
 [tool.poetry.dev-dependencies]

@@ -55,19 +55,19 @@ class MultiLinearRegression:
         self.pipeline = Pipeline(
             [("preprocessor", preprocessor), ("regressor", LinearRegression())]
         )
-        logger.info("Training model...")
+        logger.info(f"{self.__class__.__name__} Training model...")
         self.pipeline.fit(X_train, y_train)
 
-    def predict(self, test_df: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, X_test: pd.DataFrame) -> pd.DataFrame:
         """Generate predictions.
 
         Args:
         ----
-        test_df (pd.DataFrame): Test features.
+        X_test (pd.DataFrame): Test features.
 
         """
-        logger.info("Generating predictions...")
-        test_df = test_df.copy()
+        logger.info(f"{self.__class__.__name__} Generating predictions...")
+        test_df = X_test.copy()
         predictions = self.pipeline.predict(test_df)
         test_df[f"forecast_{self.prediction_horizon}"] = predictions
         return test_df
@@ -88,9 +88,7 @@ class XGBoostModel:
         self.prediction_horizon = prediction_horizon
         self.params = kwargs
 
-    def train(
-        self, X_train: pd.DataFrame, y_train: pd.Series, boosting_rounds: int
-    ) -> None:
+    def train(self, X_train: pd.DataFrame, y_train: pd.Series) -> None:
         """Train the model.
 
         Args:
@@ -100,24 +98,25 @@ class XGBoostModel:
         boosting_rounds (int): Number of boosting rounds.
 
         """
-        logger.info("Training model...")
+        logger.info(f"{self.__class__.__name__} -> Training model...")
         dtrain = xgb.DMatrix(X_train, label=y_train, enable_categorical=True)
         self.model = xgb.train(
             self.params,
             dtrain,
-            num_boost_round=boosting_rounds,
+            num_boost_round=self.params["num_boost_round"],
             evals=[(dtrain, "train")],
         )
 
-    def predict(self, test_df: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, X_test: pd.DataFrame) -> pd.DataFrame:
         """Generate predictions.
 
         Args:
         ----
-        test_df (pd.DataFrame): Test features.
+        X_test (pd.DataFrame): Test features.
 
         """
-        logger.info("Generating predictions...")
+        logger.info(f"{self.__class__.__name__} -> Generating predictions...")
+        test_df = X_test.copy()
         dtest = xgb.DMatrix(test_df, enable_categorical=True)
         preds = self.model.predict(dtest)
         test_df[f"forecast_{self.prediction_horizon}"] = preds

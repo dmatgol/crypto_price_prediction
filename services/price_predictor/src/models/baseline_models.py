@@ -20,19 +20,26 @@ class TrainMeanPctChangeBaseline:
         """
         self.prediction_horizon = prediction_horizon
 
-    def set_train_mean(self, pct_change_train_mean: float) -> None:
+    def train(
+        self,
+        X_train: pd.DataFrame,
+        y_train: pd.DataFrame,
+        pct_change_train_mean: float,
+    ) -> None:
         """Set the mean pct change of the train data.
 
         Args:
         ----
+        X_train: pd.DataFrame: Train data.
+        y_train: pd.DataFrame: Train labels.
         pct_change_train_mean (float): Mean pct change of the train data.
 
         """
         self.pct_change_train_mean = pct_change_train_mean
 
-    def predict(self, test_df: pd.DataFrame) -> pd.DataFrame:
+    def predict(self, X_test: pd.DataFrame) -> pd.DataFrame:
         """Predict based on the mean pct change seen in train data."""
-        df_ = test_df.copy()
+        df_ = X_test.copy()
         df_[f"forecast_{self.prediction_horizon}"] = self.pct_change_train_mean
         return df_
 
@@ -52,15 +59,15 @@ class MovingAverageBaseline:
         self.window_size = window_size
         self.prediction_horizon = prediction_horizon
 
-    def predict(self, test_df: pd.DataFrame) -> pd.Series:
+    def predict(self, X_test: pd.DataFrame) -> pd.Series:
         """Generate moving average predictions using only test data.
 
         Args:
         ----
-        test_df (pd.DataFrame): DataFrame containing test data.
+        X_test (pd.DataFrame): DataFrame containing test data.
 
         """
-        test_df = test_df.copy()
+        test_df = X_test.copy()
 
         for product in test_df["product_id"].unique():
             product_df = test_df[test_df["product_id"] == product].sort_values(
