@@ -2,11 +2,14 @@ import pandas as pd
 from comet_ml import Experiment
 from feature_engineering import FeatureEngineer
 from train_evaluation import Evaluator, Trainer
-from utils import compare_models, load_models, log_model_results
 
 from tools.logging_config import logger
 from tools.ohlc_data_reader import OhlcDataReader
 from tools.settings import SupportedCoins, settings
+
+from utils import log_best_model  # isort:skip
+from utils import compare_models, load_models, log_model_results  # isort:skip
+
 
 FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
 BASELINE_MODEL_CONFIG = "src/configs/baseline_config.yaml"
@@ -146,6 +149,13 @@ def main(
     logger.info(
         f"Best challenger by MAPE = {best_challenger} with "
         f"{challenger_metrics_test[best_challenger]}"
+    )
+    log_best_model(
+        model=trained_challengers[best_challenger],
+        model_name=best_challenger,
+        best_baseline_metric=baseline_metrics_test[best_baseline]["MAPE"],
+        best_challenger_metric=challenger_metrics_test[best_challenger]["MAPE"],
+        experiment=experiment,
     )
 
 
