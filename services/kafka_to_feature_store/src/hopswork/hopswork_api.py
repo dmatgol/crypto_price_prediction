@@ -1,8 +1,10 @@
 import json
 from datetime import datetime, timezone
+from typing import Any
 
 import hopsworks
 import pandas as pd
+from hsfs import feature
 from settings.config import settings
 
 
@@ -41,7 +43,7 @@ def push_data_to_feature_store(
         description="OHLC data coming from Kraken/Coinbase",
         primary_key=feature_group_primary_keys,
         event_time=feature_group_event_time,
-        online_enabled=True,
+        online_enabled=False,
     )
 
     df = pd.DataFrame(data)
@@ -75,40 +77,51 @@ def push_data_to_feature_store(
         },
     )
 
+    df["start_time"] = df["start_time"].apply(lambda x: x.isoformat())
+    df["end_time"] = df["end_time"].apply(lambda x: x.isoformat())
+
     if online_offline == "online":
-        index_fg = fs.get_or_create_feature_group(
-            name=f"{feature_group_name}_timestamp_index",
-            version=feature_group_version,
-            description="Index feature containing trade timestamps",
-            primary_key=["product_id"],
+        product_id = df["product_id"].values[0]
+
+        online_fg = fs.get_or_create_feature_group(
+            name="bars_online_latest_n",
+            version=1,
+            primary_key=["product_id"],  # ONLY product_id
+            description="Stores up to 14 bars per product in an array",
             online_enabled=True,
+            features=[
+                feature.Feature(name="product_id", type="STRING"),
+                feature.Feature(name="bars_array", type="STRING"),
+            ],
         )
-        product_id = df["product_id"]
-        timestamp_unix = df["timestamp_unix"]
-        index_df = index_fg.read_online(keys=[product_id])
-        if index_df.empty:
-            timestamps_list = []
+        feature_view = fs.get_or_create_feature_view(
+            name="online_feature_view",
+            version=1,
+            query=online_fg.select_all(),
+        )
+        result = feature_view.get_feature_vector({"product_id": product_id})
+        if not result or not result["product_id"]:
+            bars_list: list[dict[str, Any]] = []
         else:
-            index_row = index_df.iloc[0]
-            timestamps_str = index_row["timestamps_unix"]
-            timestamps_list = deserialize_timestamps(timestamps_str)
+            bars_array_str = result["bars_array"][0]  # might be JSON
+            bars_list = json.loads(bars_array_str) if bars_array_str else []
 
-        # Add the new timestamp to the list
-        timestamps_list.append(timestamp_unix)
+        # Append new bar
+        new_bar_data = df.iloc[0].to_dict()
+        bars_list.append(new_bar_data)
 
-        # Remove timestamps older than desired time window (e.g., last 3 hours)
-        current_time_unix = int(datetime.now(timezone.utc).timestamp())
-        time_window_seconds = 3 * 60 * 60  # 3 hours
-        cutoff_time = current_time_unix - time_window_seconds
-        timestamps_list = [ts for ts in timestamps_list if ts >= cutoff_time]
+        # If > 14, remove the oldest
+        if len(bars_list) > 3:
+            bars_list.pop(0)
 
-        # Serialize and update the index feature group
-        updated_index_data = {
+        # Write back
+        updated_row = {
             "product_id": product_id,
-            "timestamps_unix": serialize_timestamps(timestamps_list),
+            "bars_array": json.dumps(bars_list),
         }
-        index_df = pd.DataFrame([updated_index_data])
-        index_fg.insert(index_df, write_options={"wait_for_job": False})
+        online_fg.insert(
+            pd.DataFrame([updated_row]), write_options={"wait_for_job": False}
+        )
 
 
 def deserialize_timestamps(timestamps_str: str):
