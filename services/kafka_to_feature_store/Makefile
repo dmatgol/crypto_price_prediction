@@ -20,7 +20,7 @@ run-live: build
 		--env-file=.env \
 		--env-file=credentials.env \
 		-e BROKER_ADDRESS=redpanda:9092 \
-		-e INPUT_TOPIC=tick_imbalance_bars_historical \
+		-e INPUT_TOPIC=tick_imbalance_bars_LIVE \
 		-e BUFFER_SIZE=1 \
 		-e LIVE_OR_HISTORICAL=live \
 		-e CREATE_NEW_CONSUMER_GROUP=True \

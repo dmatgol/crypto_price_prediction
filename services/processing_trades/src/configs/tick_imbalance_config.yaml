@@ -7,11 +7,11 @@ product_ids:
   - coin: "ETH-USD"
     aggregation:
       type: "tick imbalance"
-      interval: 100
+      interval: 250
   - coin: "BTC-USD"
     aggregation:
       type: "tick imbalance"
-      interval: 175
+      interval: 500
   - coin: "LTC-USD"
     aggregation:
       type: "tick imbalance"
@@ -19,4 +19,4 @@ product_ids:
   - coin: "XRP-USD"
     aggregation:
       type: "tick imbalance"
-      interval: 50
+      interval: 100

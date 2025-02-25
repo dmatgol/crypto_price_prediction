@@ -1,11 +1,11 @@
 import json
 from datetime import datetime, timezone
-from typing import Any
 
 import hopsworks
 import pandas as pd
-from hsfs import feature
+from hsfs.feature import Feature
 from settings.config import settings
+from utils.logging_config import logger
 
 
 def push_data_to_feature_store(
@@ -67,51 +67,57 @@ def push_data_to_feature_store(
         start_time=pd.to_datetime(df["start_time"], utc=True),
         end_time=pd.to_datetime(df["end_time"], utc=True),
     )
+    if online_offline == "offline":
+        ohlc_feature_group.insert(
+            df,
+            write_options={
+                "start_offline_materialization": (
+                    True if online_offline == "offline" else False
+                )
+            },
+        )
+    else:
+        df["start_time"] = df["start_time"].apply(lambda x: x.isoformat())
+        df["end_time"] = df["end_time"].apply(lambda x: x.isoformat())
 
-    ohlc_feature_group.insert(
-        df,
-        write_options={
-            "start_offline_materialization": (
-                True if online_offline == "offline" else False
-            )
-        },
-    )
-
-    df["start_time"] = df["start_time"].apply(lambda x: x.isoformat())
-    df["end_time"] = df["end_time"].apply(lambda x: x.isoformat())
-
-    if online_offline == "online":
         product_id = df["product_id"].values[0]
 
         online_fg = fs.get_or_create_feature_group(
-            name="bars_online_latest_n",
+            name="bars_online_last_n",
             version=1,
             primary_key=["product_id"],  # ONLY product_id
             description="Stores up to 14 bars per product in an array",
             online_enabled=True,
             features=[
-                feature.Feature(name="product_id", type="STRING"),
-                feature.Feature(name="bars_array", type="STRING"),
+                Feature(name="product_id", type="string"),
+                Feature(
+                    name="bars_array",
+                    type="string",
+                    online_type="varchar(1000)",
+                ),
             ],
         )
-        feature_view = fs.get_or_create_feature_view(
-            name="online_feature_view",
-            version=1,
-            query=online_fg.select_all(),
-        )
-        result = feature_view.get_feature_vector({"product_id": product_id})
-        if not result or not result["product_id"]:
-            bars_list: list[dict[str, Any]] = []
-        else:
-            bars_array_str = result["bars_array"][0]  # might be JSON
+        try:
+            feature_view = fs.get_or_create_feature_view(
+                name="online_feature_view",
+                version=1,
+                query=online_fg.select_all(),
+            )
+            result = feature_view.get_feature_vector({"product_id": product_id})
+            bars_array_str = result[1]  # might be JSON
             bars_list = json.loads(bars_array_str) if bars_array_str else []
+        except Exception:
+            logger.error("Feature group doesn't exist or ...")
+            logger.error("Key is not present in the online feature store.")
+            bars_list = []
 
         # Append new bar
         new_bar_data = df.iloc[0].to_dict()
-        bars_list.append(new_bar_data)
+        if new_bar_data not in bars_list:
+            bars_list.append(new_bar_data)
 
         # If > 14, remove the oldest
-        if len(bars_list) > 3:
+        if len(bars_list) > 14:
             bars_list.pop(0)
 
         # Write back
@@ -120,7 +126,8 @@ def push_data_to_feature_store(
             "bars_array": json.dumps(bars_list),
         }
         online_fg.insert(
-            pd.DataFrame([updated_row]), write_options={"wait_for_job": False}
+            pd.DataFrame([updated_row]),
+            write_options={"start_offline_backfill": False},
         )
 
 

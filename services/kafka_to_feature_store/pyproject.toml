@@ -9,7 +9,7 @@ readme = "README.md"
 python = "3.12.4"
 quixstreams = "^2.9.0"
 loguru = "^0.7.2"
-hopsworks = "^3.7.0"
+hopsworks = {extras = ["python"], version = "^4.1.8"}
 
 
 [tool.poetry.dev-dependencies]
