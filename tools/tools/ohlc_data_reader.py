@@ -101,13 +101,18 @@ class OhlcDataReader:
         )
         return features
 
-    def read_from_online_store(self, product_id: list[str]) -> pd.DataFrame:
-        """Read the latest OHLC data for a given product_id from the online store.
+    def read_from_online_store(self, product_id: str) -> pd.DataFrame:
+        """Read the latest OHLC data for a product_id from the online store.
 
-        Note: This assumes that an online feature group and its feature view are already created.
+        Note: This assumes that an online feature group and its feature view
+        are already created.
+
+        Args:
+        ----
+        product_id (str): Product_id to fetch from online store.
         """
         online_feature_view = self._get_feature_view()
-        result = online_feature_view.get_feature_vectors(
+        result = online_feature_view.get_feature_vector(
             {"product_id": product_id}
         )
         return result

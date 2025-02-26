@@ -81,7 +81,8 @@ def log_best_model(
         pickle.dump(model, f)
 
     experiment.log_model(
-        name=model_name, file_or_folder=f"./{model_name}_return_predictor.pkl"
+        name=f"{model_name}_return_predictor",
+        file_or_folder=f"./{model_name}_return_predictor.pkl",
     )
     if best_baseline_metric > best_challenger_metric:
         logger.info("Pushing model to Comet ML...")
