@@ -82,6 +82,17 @@ class FeatureEngineer:
                 logger.debug(f"Method {method_name} not found.")
         return group
 
+    def add_pct_change(self, df: pd.DataFrame, n_bars: int) -> pd.DataFrame:
+        """Add percentage change feature to the dataframe.
+
+        Purpose: Measure the change in price over bars
+        """
+        df["pct_change"] = (
+            df.groupby("product_id")["close"].pct_change(periods=n_bars) * 100
+        )
+        df.loc[:, "pct_change"].fillna(0, inplace=True)
+        return df
+
     def add_log_return(self, df: pd.DataFrame, n_bars: int) -> pd.DataFrame:
         """Add log return feature to the dataframe.
 

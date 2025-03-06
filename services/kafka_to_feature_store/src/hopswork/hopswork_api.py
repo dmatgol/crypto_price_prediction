@@ -116,19 +116,19 @@ def push_data_to_feature_store(
         if new_bar_data not in bars_list:
             bars_list.append(new_bar_data)
 
-        # If > 14, remove the oldest
-        if len(bars_list) > 14:
-            bars_list.pop(0)
+            # If > 14, remove the oldest
+            if len(bars_list) > 14:
+                bars_list.pop(0)
 
-        # Write back
-        updated_row = {
-            "product_id": product_id,
-            "bars_array": json.dumps(bars_list),
-        }
-        online_fg.insert(
-            pd.DataFrame([updated_row]),
-            write_options={"start_offline_backfill": False},
-        )
+            # Write back
+            updated_row = {
+                "product_id": product_id,
+                "bars_array": json.dumps(bars_list),
+            }
+            online_fg.insert(
+                pd.DataFrame([updated_row]),
+                write_options={"start_offline_backfill": False},
+            )
 
 
 def deserialize_timestamps(timestamps_str: str):

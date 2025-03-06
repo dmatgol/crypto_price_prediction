@@ -64,8 +64,12 @@ class Predictor:
         ohlc_data = self.ohlc_data_reader.read_from_online_store(
             product_id=self.product_id
         )
-        ohlc_data_dict = json.loads(ohlc_data)
+        ohlc_data_dict = json.loads(ohlc_data[1])
         ohlc_data_df = pd.DataFrame(ohlc_data_dict)
+        ohlc_data_df = ohlc_data_df.assign(
+            start_time=pd.to_datetime(ohlc_data_df["start_time"], utc=True),
+            end_time=pd.to_datetime(ohlc_data_df["end_time"], utc=True),
+        )
         logger.info("Creating features for inference")
         feature_engineering = FeatureEngineer(FEATURE_ENGINEER_CONFIG)
         features = feature_engineering.add_features(ohlc_data_df)

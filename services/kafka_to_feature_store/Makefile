@@ -25,8 +25,8 @@ run-live: build
 		-e LIVE_OR_HISTORICAL=live \
 		-e CREATE_NEW_CONSUMER_GROUP=True \
 		-v $(PWD)/logs:/app/logs \
-		--name=volume_bars-to-feature-store \
-		volume_bars-to-feature-store
+		--name=tick-imbalance-to-feature-store \
+		tick-imbalance-to-feature-store
 
 run-local-historical:
 	LIVE_OR_HISTORICAL=historical \
