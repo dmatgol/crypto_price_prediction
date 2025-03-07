@@ -140,6 +140,9 @@ cython_debug/
 # vscode
 .vscode/
 
+# cursors
+.cursorrules
+
 # logs
 logs/
 

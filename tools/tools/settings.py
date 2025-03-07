@@ -1,7 +1,4 @@
-from pydantic_settings import (  # isort:skip
-    BaseSettings,
-    SettingsConfigDict,
-)
+from pydantic_settings import BaseSettings, SettingsConfigDict  # isort:skip
 from enum import Enum
 
 
@@ -59,6 +56,7 @@ class CometMLSettings(BaseSettings):
     project_name: str
     api_key: str
     workspace: str
+    model_name: str
 
     model_config = SettingsConfigDict(
         env_file=".credentials.env",
