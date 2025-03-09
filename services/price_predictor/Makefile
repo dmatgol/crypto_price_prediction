@@ -1,2 +1,5 @@
 run-local-train:
-	poetry run python src/main.py
+	poetry shell & poetry run python src/train.py
+
+run-local-inference:
+	poetry shell & poetry run python src/predictor.py

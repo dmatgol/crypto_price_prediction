@@ -122,9 +122,10 @@ class PublishToFeatureStore:
                     ):
                         logger.info("No messages received. Exiting.")
                         return
-                if msg.error():
-                    logger.error("Kafka error:", format(msg.error()))
                 else:
+                    if msg.error():
+                        logger.error("Kafka error:", format(msg.error()))
+
                     ohlc_message = json.loads(msg.value().decode("utf-8"))
                     buffer.append(ohlc_message)
 

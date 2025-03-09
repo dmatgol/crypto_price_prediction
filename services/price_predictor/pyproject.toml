@@ -29,6 +29,8 @@ ruff = "^0.5.4"
 
 [tool.ruff]
 line-length = 80
+
+[tool.ruff.lint]
 select = [
     "E",  # Pycodestyle errors
     "F",  # Pyflakes errors

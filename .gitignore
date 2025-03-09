@@ -159,3 +159,4 @@ state/
 
 # csv files
 *.csv
+*.pkl

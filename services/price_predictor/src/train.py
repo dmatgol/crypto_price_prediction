@@ -1,4 +1,5 @@
 import pandas as pd
+import yaml
 from comet_ml import Experiment
 from feature_engineering import FeatureEngineer
 from pydantic import BaseModel, Field
@@ -20,6 +21,12 @@ CHALLENGER_MODEL_CONFIG = "src/configs/challenger_config.yaml"
 class TrainingConfig(BaseModel):
     """Configuration for model training pipeline."""
 
+    feature_group_name: str | None = Field(
+        ..., description="Name of the feature group"
+    )
+    feature_group_version: int | None = Field(
+        ..., description="Version of feature group"
+    )
     feature_view_name: str = Field(..., description="Name of the feature view")
     feature_view_version: int = Field(
         ..., description="Version of feature view"
@@ -60,11 +67,20 @@ def setup_experiment(config: TrainingConfig) -> Experiment:
 
     """
     experiment = Experiment(
-        api_key=settings.comet_ml.api_key,
-        project_name=settings.comet_ml.project_name,
-        workspace=settings.comet_ml.workspace,
+        api_key=settings.comet_ml.credentials.api_key,
+        project_name=settings.comet_ml.credentials.project_name,
+        workspace=settings.comet_ml.credentials.workspace,
     )
     experiment.log_parameters(config.model_dump())
+    with open(config.feature_config_path) as f:
+        feature_config = yaml.safe_load(f)
+
+    # Add order index to maintain sequence when retrieving from CometML
+    ordered_feature_config = {
+        f"{i:02d}_{key}": value
+        for i, (key, value) in enumerate(feature_config.items())
+    }
+    experiment.log_parameter("feature_config", ordered_feature_config)
     return experiment
 
 
@@ -82,6 +98,8 @@ def fetch_ohlc_data(
     ohlc_data_reader = OhlcDataReader(
         feature_view_name=config.feature_view_name,
         feature_view_version=config.feature_view_version,
+        feature_group_name=config.feature_group_name,
+        feature_group_version=config.feature_group_version,
     )
     ohlc_data = ohlc_data_reader.read_from_offline_store(
         product_id=config.product_id,
@@ -215,7 +233,7 @@ def main(config: TrainingConfig) -> None:
     # Log best model
     log_best_model(
         model=trained_challengers[best_challenger],
-        model_name=settings.comet_ml.model_name,
+        model_name=settings.comet_ml.general_config.name_model,
         best_baseline_metric=baseline_metrics[best_baseline]["MAPE"],
         best_challenger_metric=challenger_metrics[best_challenger]["MAPE"],
         experiment=experiment,
@@ -357,11 +375,13 @@ def train_challenger_models(
 
 if __name__ == "__main__":
     config = TrainingConfig(
+        feature_group_name="offline_ohlc_feature_group",
+        feature_group_version=1,
         feature_view_name="ohlc_feature_view",
         feature_view_version=1,
         product_id=[SupportedCoins.BTC_USD.value, SupportedCoins.ETH_USD.value],
         last_n_days_to_fetch_from_store=90,
-        last_n_days_to_test_model=30,
+        last_n_days_to_test_model=10,
         prediction_window_tick=1,
     )
     main(config)

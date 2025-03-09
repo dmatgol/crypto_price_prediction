@@ -1,6 +1,8 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict  # isort:skip
 from enum import Enum
 
+from pydantic import BaseModel
+
 
 class SupportedCoins(Enum):
     """Supported exchanges."""
@@ -31,6 +33,7 @@ class AppSettings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_file=".env",
+        env_prefix="APP__",
         env_nested_delimiter="__",
         extra="ignore",
     )
@@ -50,13 +53,12 @@ class HopsworkSettings(BaseSettings):
     )
 
 
-class CometMLSettings(BaseSettings):
-    """Database settings."""
+class CometMLCredentials(BaseSettings):
+    """CometML credentials settings."""
 
-    project_name: str
     api_key: str
+    project_name: str
     workspace: str
-    model_name: str
 
     model_config = SettingsConfigDict(
         env_file=".credentials.env",
@@ -64,6 +66,28 @@ class CometMLSettings(BaseSettings):
         env_nested_delimiter="__",
         extra="ignore",
     )
+
+
+class CometMLGeneralConfig(BaseSettings):
+    """CometML general configuration settings (non-credentials)."""
+
+    name_model: str
+    status: str
+    output_folder: str = "./"
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_prefix="COMET_ML__",
+        env_nested_delimiter="__",
+        extra="ignore",
+    )
+
+
+class CometMLSettings(BaseModel):
+    """Combined CometML settings with credentials and general configuration."""
+
+    credentials: CometMLCredentials = CometMLCredentials()
+    general_config: CometMLGeneralConfig = CometMLGeneralConfig()
 
 
 class Settings(BaseSettings):
