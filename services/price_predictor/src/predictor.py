@@ -6,14 +6,14 @@ from typing import Any
 import pandas as pd
 from comet_ml import Experiment
 from comet_ml.api import API
-from feature_engineering import FeatureEngineer
 from pydantic import BaseModel
+from src.feature_engineering import FeatureEngineer
 
 from tools.logging_config import logger
 from tools.ohlc_data_reader import OhlcDataReader
 from tools.settings import settings
 
-FEATURE_ENGINEER_CONFIG = "services/price_predictor/src/configs/config.yaml"
+FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
 
 
 def restore_feature_config(experiment: Experiment) -> OrderedDict:
@@ -76,6 +76,7 @@ class Predictor:
 
         """
         self.model = self._load_model_pickle(model_path)
+        logger.info("Model loaded")
         self.ohlc_data_reader = OhlcDataReader(
             feature_view_name=feature_view_name,
             feature_view_version=feature_view_version,
@@ -123,16 +124,18 @@ class Predictor:
         # (product_id, bar_start_timestamp) as a unique key. The solution
         # is to use one feature_view specific for online and that
         # has the product_id as a feature.
-        feature_view_name = settings.app_settings.feature_view
-        feature_view_version = settings.app_settings.feature_view_version
+        feature_view_name = settings.app_settings.inference_feature_view
+        feature_view_version = (
+            settings.app_settings.inference_feature_view_version
+        )
         # Get remaining parameters from comet_ml
         features_config = restore_feature_config(experiment)
         model_path = (
             settings.comet_ml.general_config.output_folder
-            + "/"
             + settings.comet_ml.general_config.name_model
             + ".pkl"
         )
+        logger.info(f"Model path: {model_path}")
         return cls(
             model_path=model_path,
             feature_view_name=feature_view_name,
@@ -142,6 +145,7 @@ class Predictor:
         )
 
     def _load_model_pickle(self, model_path: str):
+        """Load a pickled model from disk."""
         with open(model_path, "rb") as f:
             return pickle.load(f)
 

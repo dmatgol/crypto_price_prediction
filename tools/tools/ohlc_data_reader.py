@@ -5,6 +5,7 @@ import pandas as pd
 from hsfs.feature_store import FeatureStore
 from hsfs.feature_view import FeatureView
 
+from tools.logging_config import logger
 from tools.settings import settings
 
 
@@ -29,7 +30,7 @@ class OhlcDataReader:
         self._fs = self._get_feature_store()
 
     def _get_feature_view(self) -> FeatureView:
-        """Get the feature view object that reads data from the feature store."""
+        """Get the feature view object to read data from the feature store."""
         if self.feature_group_name is None:
             # We try to get the feature view without creating it.
             # If it does not exist, we will raise an error because we would
@@ -41,7 +42,7 @@ class OhlcDataReader:
                 )
             except Exception:
                 raise ValueError(
-                    "The feature group name and version must be provided if the "
+                    "The feature group name and version must be provided if the"
                     "feature view does not exist."
                 )
 
@@ -55,9 +56,9 @@ class OhlcDataReader:
             version=self.feature_view_version,
             query=feature_group.select_all(),
         )
-        # if it already existed, check that its feature group name and version match
-        # the ones in `self.feature_group_name` and `self.feature_group_version`
-        # otherwise we raise an error
+        # if it already existed, check that its feature group name and version
+        # match the ones in `self.feature_group_name` and
+        # `self.feature_group_version`  otherwise we raise an error
         possibly_different_feature_group = (
             feature_view.get_parent_feature_groups().accessible[0]
         )
@@ -67,7 +68,8 @@ class OhlcDataReader:
             or possibly_different_feature_group.version != feature_group.version
         ):
             raise ValueError(
-                "The feature view and feature group names and versions do not match."
+                "The feature view and feature group names and versions do not"
+                "match."
             )
 
         return feature_view
@@ -87,9 +89,11 @@ class OhlcDataReader:
         """
         to_timestamp_ms = int(time.time() * 1000)
         from_timestamp_ms = to_timestamp_ms - last_n_days * 24 * 60 * 60 * 1000
-
+        logger.info(
+            f"Reading data from {from_timestamp_ms} to {to_timestamp_ms}"
+        )
         feature_view = self._get_feature_view()
-        features = feature_view.get_batch_data()
+        features = feature_view.get_batch_data(read_options={"use_hive": True})
 
         # filter the features for the given product_id and time range
         features = features[features["product_id"].isin(product_id)]
@@ -120,6 +124,7 @@ class OhlcDataReader:
     @staticmethod
     def _get_feature_store() -> FeatureStore:
         """Get feature store object to read OHLC data."""
+        logger.info("Logging into the feature store")
         project = hopsworks.login(
             project=settings.hopswork.project_name,
             api_key_value=settings.hopswork.api_key,

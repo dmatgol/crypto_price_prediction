@@ -8,12 +8,14 @@ import pandas as pd
 import seaborn as sns
 import yaml
 from comet_ml import Experiment
+from src.models.shallow_models import MultiLinearRegression, XGBoostModel
 
-from models.shallow_models import MultiLinearRegression  # isort:skip
-from models.shallow_models import XGBoostModel  # isort:skip
+from src.models.baseline_models import (  # isort:skip
+    MovingAverageBaseline,
+    TrainMeanPctChangeBaseline,
+)
 
-from models.baseline_models import MovingAverageBaseline  # isort:skip
-from models.baseline_models import TrainMeanPctChangeBaseline  # isort:skip
+
 from tools.logging_config import logger  # isort:skip
 
 MODEL_CLASSES = {
@@ -76,15 +78,18 @@ def log_best_model(
     experiment (Experiment): Comet ML experiment
 
     """
-    with open(f"./{model_name}.pkl", "wb") as f:
+    # Store model in src directory
+    model_path = f"src/{model_name}.pkl"
+
+    with open(model_path, "wb") as f:
         logger.info("Logging best model...")
         pickle.dump(model, f)
 
     experiment.log_model(
         name=f"{model_name}",
-        file_or_folder=f"./{model_name}.pkl",
+        file_or_folder=model_path,
     )
-    if best_baseline_metric > best_challenger_metric:
+    if best_baseline_metric < best_challenger_metric:
         logger.info("Pushing model to Comet ML...")
         experiment.register_model(model_name=f"{model_name}")
 

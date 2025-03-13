@@ -13,23 +13,27 @@ class SupportedCoins(Enum):
     XRP_USD: str = "XRP-USD"
 
     @classmethod
-    def get_supported_exchanges(cls) -> list[str]:
+    def get_supported_coins(cls) -> list[str]:
         """Get supported exchanges."""
-        return [coin.name for coin in cls]
+        return [coin.value for coin in cls]
 
     @classmethod
     def validate(cls, coin_name: str) -> bool:
         """Validate coin name."""
-        return coin_name in cls.get_supported_exchanges()
+        return coin_name in cls.get_supported_coins()
 
 
 class AppSettings(BaseSettings):
     """App settings."""
 
-    feature_group: str
-    feature_group_version: int
-    feature_view: str
-    feature_view_version: int
+    train_feature_group: str
+    train_feature_group_version: int
+    train_feature_view: str
+    train_feature_view_version: int
+    inference_feature_group: str | None = None
+    inference_feature_group_version: int | None = None
+    inference_feature_view: str | None = None
+    inference_feature_view_version: int | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -73,7 +77,7 @@ class CometMLGeneralConfig(BaseSettings):
 
     name_model: str
     status: str
-    output_folder: str = "./"
+    output_folder: str = "src/"
 
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -29,7 +29,7 @@ class MultiLinearRegression:
 
         Args:
         ----
-        X_train (pd.DataFrame): Training features.
+        X_train (pd.DataFrame): Training features.ı
         y_train (pd.Series): Training labels.
         kwargs: keyword arguments for train other models.
 
