@@ -10,6 +10,7 @@ variables:
     inputType: FreeText
     description: Consumer group to read tick imbalance candles
     defaultValue: tick_imbalance_ohlc_consumer_group
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
