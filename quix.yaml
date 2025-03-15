@@ -49,6 +49,55 @@ deployments:
         description: KAFKA consumer group to read tick imbalance candles
         required: true
         value: trade_to_tick_imbalance_ohlc_live
+  - name: kafka_to_feature_store
+    application: services/kafka_to_feature_store
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: INPUT_TOPIC
+        inputType: InputTopic
+        description: KAFKA topic with the tick imbalance candles
+        required: true
+        value: tick_imbalance_bars_live
+      - name: CONSUMER_GROUP
+        inputType: FreeText
+        description: Consumer group to read tick imbalance candles
+        required: true
+        value: tick_imbalance_ohlc_consumer_group
+      - name: FEATURE_GROUP
+        inputType: FreeText
+        description: Feature group name for the online feature store
+        required: true
+        value: online_ohlc_feature_group
+      - name: FEATURE_GROUP_VERSION
+        inputType: FreeText
+        description: Feature group version for the online feature store
+        required: true
+        value: 1
+      - name: FEATURE_GROUP_PRIMARY_KEYS
+        inputType: FreeText
+        description: Online feature group primary key
+        required: true
+        value: '["start_time"]'
+      - name: LIVE_OR_HISTORICAL
+        inputType: FreeText
+        description: Whether to load the data to online or offline feature store
+        required: true
+        value: live
+      - name: PROJECT_NAME
+        inputType: Secret
+        description: Hopsworks project name
+        required: true
+        secretKey: PROJECT_NAME
+      - name: API_KEY
+        inputType: Secret
+        description: Hopsworks API KEY
+        required: true
+        secretKey: API_KEY
 
 # This section describes the Topics of the data pipeline
 topics:
