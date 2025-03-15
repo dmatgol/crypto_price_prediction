@@ -9,7 +9,7 @@ from pydantic_settings import (  # isort:skip
 class AppSettings(BaseSettings):
     """App settings."""
 
-    kafka_broker_address: str
+    kafka_broker_address: str | None = None
     input_topic: str | None = None
     output_topic: str | None = None
     consumer_group: str
