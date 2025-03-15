@@ -31,6 +31,11 @@ variables:
     description: Whether to load the data to online or offline feature store
     defaultValue: live
     required: true
+  - name: PROJECT_NAME
+    inputType: Secret
+    description: Hopsworks project name
+    defaultValue: PROJECT_NAME
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
