@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 import hopsworks
 import pandas as pd
 from hsfs.feature import Feature
+
 from settings.config import settings
 from utils.logging_config import logger
 
@@ -83,9 +84,9 @@ def push_data_to_feature_store(
         product_id = df["product_id"].values[0]
 
         online_fg = fs.get_or_create_feature_group(
-            name="bars_online_last_n",
-            version=1,
-            primary_key=["product_id"],  # ONLY product_id
+            name=feature_group_name,
+            version=feature_group_version,
+            primary_key=feature_group_primary_keys,  # ONLY product_id
             description="Stores up to 14 bars per product in an array",
             online_enabled=True,
             features=[

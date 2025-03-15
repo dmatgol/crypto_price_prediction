@@ -17,7 +17,7 @@ class AppSettings(BaseSettings):
     feature_group: str
     feature_group_version: int
     feature_group_primary_keys: list[str]
-    feature_group_event_time: str
+    feature_group_event_time: str = "start_time"
     buffer_size: int = 1
 
     model_config = SettingsConfigDict(
