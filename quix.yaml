@@ -25,6 +25,30 @@ deployments:
         description: Whether we connect to Kraken Websocket for live data or Kraken API for historical data
         required: true
         value: live
+  - name: processing_trades
+    application: services/processing_trades
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: KAFKA_INPUT_TOPIC
+        inputType: InputTopic
+        description: Kafka input topic to read the raw trade data from.
+        required: true
+        value: trade
+      - name: KAFKA_OUTPUT_TOPIC
+        inputType: OutputTopic
+        description: Output topic with tick imbalance ohlc candles
+        required: true
+        value: tick_imbalance_bars_live
+      - name: KAFKA_CONSUMER_GROUP
+        inputType: FreeText
+        description: KAFKA consumer group to read tick imbalance candles
+        required: true
+        value: trade_to_tick_imbalance_ohlc_live
 
 # This section describes the Topics of the data pipeline
 topics:
