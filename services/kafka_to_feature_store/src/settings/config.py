@@ -46,7 +46,7 @@ class Settings(BaseSettings):
     app_settings: AppSettings = AppSettings()
     hopswork: HopsworkSettings = HopsworkSettings()
     live_or_historical: str
-    save_every_n_sec: int
+    save_every_n_sec: int | None = None
 
     model_config = SettingsConfigDict(
         env_file=".env",
