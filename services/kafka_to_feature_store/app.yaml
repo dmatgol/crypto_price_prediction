@@ -11,6 +11,11 @@ variables:
     description: Consumer group to read tick imbalance candles
     defaultValue: tick_imbalance_ohlc_consumer_group
     required: true
+  - name: FEATURE_GROUP
+    inputType: FreeText
+    description: Feature group name for the online feature store
+    defaultValue: online_ohlc_feature_group
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
