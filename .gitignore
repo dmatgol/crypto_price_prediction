@@ -160,3 +160,8 @@ state/
 # csv files
 *.csv
 *.pkl
+compose.local.yaml
+.secrets
+.venv/
+certificates/
+.quix.yaml.variables

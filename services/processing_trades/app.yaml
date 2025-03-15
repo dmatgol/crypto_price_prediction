@@ -1,0 +1,6 @@
+name: processing_trades
+language: python
+variables: []
+dockerfile: Dockerfile
+runEntryPoint: src/processing.py
+defaultFile: src/processing.py
