@@ -82,7 +82,7 @@ deployments:
         inputType: FreeText
         description: Online feature group primary key
         required: true
-        value: '["start_time"]'
+        value: '["product_id"]'
       - name: LIVE_OR_HISTORICAL
         inputType: FreeText
         description: Whether to load the data to online or offline feature store
