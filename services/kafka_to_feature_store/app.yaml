@@ -30,6 +30,7 @@ variables:
     inputType: FreeText
     description: Whether to load the data to online or offline feature store
     defaultValue: live
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
