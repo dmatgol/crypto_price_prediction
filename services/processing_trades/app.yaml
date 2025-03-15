@@ -1,6 +1,11 @@
 name: processing_trades
 language: python
-variables: []
+variables:
+  - name: KAFKA_INPUT_TOPIC
+    inputType: InputTopic
+    description: Kafka input topic to read the raw trade data from.
+    defaultValue: trade
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/processing.py
 defaultFile: src/processing.py
