@@ -29,3 +29,4 @@ deployments:
 # This section describes the Topics of the data pipeline
 topics:
   - name: trade
+  - name: trade_to_tick_imbalance_ohlc_live
