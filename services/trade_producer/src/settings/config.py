@@ -70,7 +70,7 @@ class LiveHistoricalSettings(BaseSettings):
     """Run live or historical."""
 
     live_or_historical: str
-    last_n_days: Optional[int]
+    last_n_days: Optional[int] = None
     cache_dir_historical_data: Optional[str] = None
 
     model_config = SettingsConfigDict(
