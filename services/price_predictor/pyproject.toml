@@ -3,7 +3,6 @@ name = "price-predictor"
 version = "0.1.0"
 description = ""
 authors = ["Diogo Matias <diogo.pomatias@gmail.com>"]
-readme = "README.md"
 
 packages = [
     { include = "src", from = "." }
@@ -12,7 +11,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-tools = {path = "../../tools", develop = true}
+tools = {path = "../tools", develop = true}
 ipykernel = "^6.29.5"
 seaborn = "^0.13.2"
 scikit-learn = "^1.5.2"
@@ -23,7 +22,7 @@ xgboost = "^2.1.4"
 comet-ml = "^3.49.0"
 fastapi = "^0.115.11"
 uvicorn = "^0.34.0"
-pyarrow = "14.0.1"
+pyyaml = "^6.0.2"
 
 
 [tool.poetry.dev-dependencies]
