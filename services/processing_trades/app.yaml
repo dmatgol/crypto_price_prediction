@@ -11,6 +11,11 @@ variables:
     description: Output topic with tick imbalance ohlc candles
     defaultValue: tick_imbalance_bars_live
     required: true
+  - name: KAFKA_CONSUMER_GROUP
+    inputType: FreeText
+    description: KAFKA consumer group to read tick imbalance candles
+    defaultValue: trade_to_tick_imbalance_ohlc_live
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/processing.py
 defaultFile: src/processing.py
