@@ -41,6 +41,10 @@ variables:
     description: Hopsworks API KEY
     defaultValue: API_KEY
     required: true
+  - name: SAVE_EVERY_N_SEC
+    inputType: FreeText
+    description: Save buffer to online feature store every N seconds
+    defaultValue: 600
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
