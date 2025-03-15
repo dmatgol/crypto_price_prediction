@@ -21,6 +21,11 @@ variables:
     description: Feature group version for the online feature store
     defaultValue: 1
     required: true
+  - name: FEATURE_GROUP_PRIMARY_KEYS
+    inputType: FreeText
+    description: Online feature group primary key
+    defaultValue: '["start_time"]'
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
