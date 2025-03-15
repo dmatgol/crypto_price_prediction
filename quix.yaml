@@ -98,6 +98,10 @@ deployments:
         description: Hopsworks API KEY
         required: true
         secretKey: API_KEY
+      - name: SAVE_EVERY_N_SEC
+        inputType: FreeText
+        description: Save buffer to online feature store every N seconds
+        value: 600
 
 # This section describes the Topics of the data pipeline
 topics:
