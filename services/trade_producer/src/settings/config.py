@@ -36,7 +36,7 @@ class SupportedExchanges:
 class KafkaSettings(BaseSettings):
     """Database settings."""
 
-    kafka_broker_address: str = None
+    kafka_broker_address: str | None = None
     kafka_topic: str
 
     model_config = SettingsConfigDict(
