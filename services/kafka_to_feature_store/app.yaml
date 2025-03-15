@@ -21,11 +21,6 @@ variables:
     description: Feature group version for the online feature store
     defaultValue: 1
     required: true
-  - name: BUFFER_SIZE
-    inputType: FreeText
-    description: Buffer size to load to hopsworks
-    defaultValue: 1
-    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
