@@ -26,6 +26,10 @@ variables:
     description: Online feature group primary key
     defaultValue: '["start_time"]'
     required: true
+  - name: LIVE_OR_HISTORICAL
+    inputType: FreeText
+    description: Whether to load the data to online or offline feature store
+    defaultValue: live
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
