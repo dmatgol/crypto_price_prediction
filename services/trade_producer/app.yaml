@@ -4,7 +4,7 @@ variables:
   - name: KAFKA_TOPIC
     inputType: OutputTopic
     description: The kafka topic that will save the trade data
-    defaultValue: first_topic
+    defaultValue: trade
     required: true
   - name: LIVE_OR_HISTORICAL
     inputType: FreeText
