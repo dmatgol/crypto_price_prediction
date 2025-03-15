@@ -6,6 +6,11 @@ variables:
     description: Kafka input topic to read the raw trade data from.
     defaultValue: trade
     required: true
+  - name: KAFKA_OUTPUT_TOPIC
+    inputType: OutputTopic
+    description: Output topic with tick imbalance ohlc candles
+    defaultValue: trade_to_tick_imbalance_ohlc_live
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/processing.py
 defaultFile: src/processing.py
