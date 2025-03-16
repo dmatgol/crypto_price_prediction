@@ -41,6 +41,11 @@ variables:
     description: Name of the model to download from COMET ML
     defaultValue: crypto_currency_return_predictor
     required: true
+  - name: COMET_ML__STATUS
+    inputType: FreeText
+    description: Environment (prod, dev, stag) to download the model from
+    defaultValue: production
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
