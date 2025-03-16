@@ -1,6 +1,11 @@
 name: price_predictor
 language: python
-variables: []
+variables:
+  - name: HOPSWORKS__PROJECT_NAME
+    inputType: Secret
+    description: Hopsworks project name
+    defaultValue: PROJECT_NAME
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
