@@ -6,6 +6,11 @@ variables:
     description: Hopsworks project name
     defaultValue: PROJECT_NAME
     required: true
+  - name: HOPSWORKS__API_KEY
+    inputType: Secret
+    description: Hopsworks API Key
+    defaultValue: API_KEY
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
