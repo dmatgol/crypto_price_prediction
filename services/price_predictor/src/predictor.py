@@ -7,8 +7,8 @@ import pandas as pd
 from comet_ml import Experiment
 from comet_ml.api import API
 from pydantic import BaseModel
-from src.feature_engineering import FeatureEngineer
 
+from src.feature_engineering import FeatureEngineer
 from tools.logging_config import logger
 from tools.ohlc_data_reader import OhlcDataReader
 from tools.settings import settings
@@ -124,10 +124,8 @@ class Predictor:
         # (product_id, bar_start_timestamp) as a unique key. The solution
         # is to use one feature_view specific for online and that
         # has the product_id as a feature.
-        feature_view_name = settings.app_settings.inference_feature_view
-        feature_view_version = (
-            settings.app_settings.inference_feature_view_version
-        )
+        feature_view_name = settings.app_settings.feature_view
+        feature_view_version = settings.app_settings.feature_view_version
         # Get remaining parameters from comet_ml
         features_config = restore_feature_config(experiment)
         model_path = (

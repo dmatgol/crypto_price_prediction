@@ -2,9 +2,6 @@ import pandas as pd
 import yaml
 from comet_ml import Experiment
 from pydantic import BaseModel, Field
-from tools.logging_config import logger
-from tools.ohlc_data_reader import OhlcDataReader
-from tools.settings import SupportedCoins, settings
 
 from src.feature_engineering import FeatureEngineer
 from src.train_evaluation import Evaluator, Trainer
@@ -14,6 +11,9 @@ from src.utils import (
     log_best_model,
     log_model_results,
 )
+from tools.logging_config import logger
+from tools.ohlc_data_reader import OhlcDataReader
+from tools.settings import SupportedCoins, settings
 
 FEATURE_ENGINEER_CONFIG = "src/configs/config.yaml"
 BASELINE_MODEL_CONFIG = "src/configs/baseline_config.yaml"
@@ -23,16 +23,16 @@ CHALLENGER_MODEL_CONFIG = "src/configs/challenger_config.yaml"
 class TrainingConfig(BaseModel):
     """Configuration for model training pipeline."""
 
-    train_feature_group_name: str | None = Field(
+    feature_group_name: str | None = Field(
         ..., description="Name of the feature group"
     )
-    train_feature_group_version: int | None = Field(
+    feature_group_version: int | None = Field(
         ..., description="Version of feature group"
     )
-    train_feature_view_name: str | None = Field(
+    feature_view_name: str | None = Field(
         ..., description="Name of the feature view"
     )
-    train_feature_view_version: int | None = Field(
+    feature_view_version: int | None = Field(
         ..., description="Version of feature view"
     )
     product_id: list[str] = Field(
@@ -100,10 +100,10 @@ def fetch_ohlc_data(
 
     """
     ohlc_data_reader = OhlcDataReader(
-        feature_view_name=config.train_feature_view_name,
-        feature_view_version=config.train_feature_view_version,
-        feature_group_name=config.train_feature_group_name,
-        feature_group_version=config.train_feature_group_version,
+        feature_view_name=config.feature_view_name,
+        feature_view_version=config.feature_view_version,
+        feature_group_name=config.feature_group_name,
+        feature_group_version=config.feature_group_version,
     )
     ohlc_data = ohlc_data_reader.read_from_offline_store(
         product_id=config.product_id,
@@ -379,10 +379,10 @@ def train_challenger_models(
 
 if __name__ == "__main__":
     config = TrainingConfig(
-        train_feature_group_name="offline_ohlc_feature_group",
-        train_feature_group_version=1,
-        train_feature_view_name="ohlc_feature_view",
-        train_feature_view_version=1,
+        feature_group_name=settings.app_settings.feature_group,
+        feature_group_version=settings.app_settings.feature_group_version,
+        feature_view_name=settings.app_settings.feature_view,
+        feature_view_version=settings.app_settings.feature_view_version,
         product_id=[SupportedCoins.BTC_USD.value, SupportedCoins.ETH_USD.value],
         last_n_days_to_fetch_from_store=90,
         last_n_days_to_test_model=10,

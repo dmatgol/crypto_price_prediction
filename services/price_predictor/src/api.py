@@ -3,8 +3,8 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from src.predictor import Predictor
 
+from src.predictor import Predictor
 from tools.settings import SupportedCoins, settings
 
 app = FastAPI(

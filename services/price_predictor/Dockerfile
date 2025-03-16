@@ -37,7 +37,7 @@ WORKDIR /app
 
 
 # Copy the application code to the container
-COPY ../tools/ ./tools
+COPY tools/ ./tools
 COPY price_predictor/poetry.lock price_predictor/pyproject.toml price_predictor/ ./price_predictor/
 
 
@@ -58,7 +58,7 @@ ENV VIRTUAL_ENV=/app/price_predictor/.venv \
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 WORKDIR /app
-COPY ../tools /app/tools
+COPY tools /app/tools
 COPY price_predictor/ /app/price_predictor
 
 WORKDIR /app/price_predictor
