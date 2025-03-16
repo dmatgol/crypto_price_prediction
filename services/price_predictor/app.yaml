@@ -31,6 +31,11 @@ variables:
     description: Online feature view name
     defaultValue: online_feature_view
     required: true
+  - name: APP__FEATURE_VIEW_VERSION
+    inputType: FreeText
+    description: Online feature view version
+    defaultValue: 1
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
