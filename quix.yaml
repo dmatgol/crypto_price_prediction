@@ -102,6 +102,63 @@ deployments:
         inputType: FreeText
         description: Save buffer to online feature store every N seconds
         value: 600
+  - name: price_predictor
+    application: services/price_predictor
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    publicAccess:
+      enabled: true
+      urlPrefix: price-predictor
+    variables:
+      - name: HOPSWORKS__PROJECT_NAME
+        inputType: Secret
+        description: Hopsworks project name
+        required: true
+        secretKey: PROJECT_NAME
+      - name: HOPSWORKS__API_KEY
+        inputType: Secret
+        description: Hopsworks API Key
+        required: true
+        secretKey: API_KEY
+      - name: COMET_ML__PROJECT_NAME
+        inputType: Secret
+        description: Comet ML project name
+        required: true
+        secretKey: COMET_ML__PROJECT_NAME
+      - name: COMET_ML__API_KEY
+        inputType: Secret
+        description: Comet ML api key
+        required: true
+        secretKey: COMET_ML__API_KEY
+      - name: COMET_ML__WORKSPACE
+        inputType: Secret
+        description: Comet ML workspace
+        required: true
+        secretKey: COMET_ML__WORKSPACE
+      - name: APP__FEATURE_VIEW
+        inputType: FreeText
+        description: Online feature view name
+        required: true
+        value: online_feature_view
+      - name: APP__FEATURE_VIEW_VERSION
+        inputType: FreeText
+        description: Online feature view version
+        required: true
+        value: 1
+      - name: COMET_ML__NAME_MODEL
+        inputType: FreeText
+        description: Name of the model to download from COMET ML
+        required: true
+        value: crypto_currency_return_predictor
+      - name: COMET_ML__STATUS
+        inputType: FreeText
+        description: Environment (prod, dev, stag) to download the model from
+        required: true
+        value: production
 
 # This section describes the Topics of the data pipeline
 topics:
