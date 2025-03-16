@@ -63,7 +63,7 @@ COPY price_predictor/ /app/price_predictor
 
 WORKDIR /app/price_predictor
 
-EXPOSE 8001
+EXPOSE 80
 
 # Command to run the application
 CMD if [ "$TRAIN_OR_INFERENCE" = "train" ]; then \
