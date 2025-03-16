@@ -36,6 +36,11 @@ variables:
     description: Online feature view version
     defaultValue: 1
     required: true
+  - name: COMET_ML__NAME_MODEL
+    inputType: FreeText
+    description: Name of the model to download from COMET ML
+    defaultValue: crypto_currency_return_predictor
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
