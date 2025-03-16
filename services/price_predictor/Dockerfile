@@ -69,7 +69,7 @@ EXPOSE 80
 CMD if [ "$TRAIN_OR_INFERENCE" = "train" ]; then \
     python src/train.py; \
     elif [ "$TRAIN_OR_INFERENCE" = "inference" ]; then  \
-    uvicorn src.api:app --host 0.0.0.0 --port 8001; \
+    uvicorn src.api:app --host 0.0.0.0 --port 80; \
     else \
     echo "Invalid argument: $TRAIN_OR_INFERENCE" && exit 1; \
     fi
