@@ -37,8 +37,7 @@ WORKDIR /app
 
 
 # Copy the application code to the container
-COPY tools/ ./tools
-COPY price_predictor/poetry.lock price_predictor/pyproject.toml price_predictor/ ./price_predictor/
+COPY poetry.lock pyproject.toml ./price_predictor/
 
 
 # Provide poetry with minimal information to build the virtual
