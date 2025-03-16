@@ -26,6 +26,11 @@ variables:
     description: Comet ML workspace
     defaultValue: COMET_ML__WORKSPACE
     required: true
+  - name: APP__FEATURE_VIEW
+    inputType: FreeText
+    description: Online feature view name
+    defaultValue: online_feature_view
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
