@@ -58,7 +58,7 @@ COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 WORKDIR /app
 COPY . .
 
-ENV TRAIN_OR_INFERENCE = ""
+ENV TRAIN_OR_INFERENCE = "inference"
 
 EXPOSE 80
 
