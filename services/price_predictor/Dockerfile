@@ -37,30 +37,28 @@ WORKDIR /app
 
 
 # Copy the application code to the container
-COPY poetry.lock pyproject.toml ./price_predictor/
+COPY poetry.lock pyproject.toml ./
 
 
 # Provide poetry with minimal information to build the virtual
 # environment to make build faster
 # Remove poetry functionality of cached libraries to reduce image size
-WORKDIR /app/price_predictor
 RUN poetry install --without dev  && rm -rf $POETRY_CACHE_DIR
 
 FROM python:3.12.4-slim as runtime
 COPY --from=builder /usr/lib/libta_lib.so* /usr/lib/
-# stream output to console
+#stream output to console
 ENV PYTHONUNBUFFERED=1
 
-ENV VIRTUAL_ENV=/app/price_predictor/.venv \
-    PATH="/app/price_predictor/.venv/bin:$PATH"
+ENV VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH"
 
 COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
 
 WORKDIR /app
-COPY tools /app/tools
-COPY price_predictor/ /app/price_predictor
+COPY . .
 
-WORKDIR /app/price_predictor
+
 
 EXPOSE 80
 
