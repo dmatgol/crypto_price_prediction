@@ -46,6 +46,11 @@ variables:
     description: Environment (prod, dev, stag) to download the model from
     defaultValue: production
     required: true
+  - name: TRAIN_OR_INFERENCE
+    inputType: FreeText
+    description: Train or inference mode
+    defaultValue: inference
+    required: true
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
