@@ -1,4 +1,5 @@
 from dataclasses import asdict, dataclass
+from datetime import datetime
 from typing import Any
 
 import numpy as np
@@ -56,19 +57,18 @@ class TickImbalanceBars(FinanceDataStructure):
             "cumulative_trade_amount": 0,
             # New features
             "net_buy_ratio": 0.0,
-            "bar_formation_time": 0.0,
+            "bar_formation_time_seconds": 0.0,
             "trade_intensity": 0.0,
             "max_buy_run": 0,
             "max_sell_run": 0,
             "price_volatility": 0.0,
-            "price_path": [],  # To track price changes for volatility
-            "trade_sequence": [],  # To track consecutive trades
+            "inter_bar_gap_seconds": 0,
         }
 
     def calculate_features(
         self,
         state: State,
-        current_time: int,
+        current_time: str,
         prices: list[float],
         trade_sequences: list[
             dict[str, Any]
@@ -77,7 +77,7 @@ class TickImbalanceBars(FinanceDataStructure):
         """Calculate additional bar features."""
         buy_trades = state.get("buy_trades", default=0)
         total_ticks = state.get("ticks_counter", default=0)
-        start_time = state.get("start_time", default=current_time)
+        start_time = state.get("start_time")
 
         # 1. Net Buy Ratio (-1 to 1)
         net_buy_ratio = (
@@ -85,9 +85,11 @@ class TickImbalanceBars(FinanceDataStructure):
         )
 
         # 2. Bar Formation Time (seconds)
+        end_time = datetime.fromisoformat(current_time.rstrip("Z"))
+        start_time = datetime.fromisoformat(start_time.rstrip("Z"))
         bar_formation_time = (
-            current_time - start_time
-        ) / 1000  # Convert to seconds
+            end_time - start_time
+        ).total_seconds()  # Convert to seconds
 
         # 3. Intrabar Trade Intensity (trades per second)
         trade_intensity = (
@@ -117,13 +119,27 @@ class TickImbalanceBars(FinanceDataStructure):
         # Using standard deviation of price changes
         price_volatility = np.std(prices) if len(prices) > 1 else 0
 
+        if state.get("end_time", default=0) != 0:
+            previous_candle_end_time = datetime.fromisoformat(
+                state.get("end_time").rstrip("Z")
+            )
+            start_time = datetime.fromisoformat(
+                state.get("start_time").rstrip("Z")
+            )
+            inter_bar_gap_seconds = (
+                start_time - previous_candle_end_time
+            ).total_seconds()
+        else:
+            inter_bar_gap_seconds = 0
+
         return {
             "net_buy_ratio": round(net_buy_ratio, 4),
-            "bar_formation_time": round(bar_formation_time, 4),
+            "bar_formation_time_seconds": round(bar_formation_time, 4),
             "trade_intensity": round(trade_intensity, 4),
             "max_buy_run": max_buy_run,
             "max_sell_run": max_sell_run,
-            "price_volatility": round(price_volatility, 4),
+            "price_volatility": float(round(price_volatility, 4)),
+            "inter_bar_gap_seconds": inter_bar_gap_seconds,
         }
 
     def process_trade(
@@ -147,6 +163,9 @@ class TickImbalanceBars(FinanceDataStructure):
         trade_sequences = [
             TradeSequence.from_dict(seq) for seq in trade_sequences_data
         ]
+        # Update total ticker
+        ticks_counter += 1
+        state.set("ticks_counter", ticks_counter)
 
         # Update price path
         price_path.append(trade["price"])
@@ -160,7 +179,6 @@ class TickImbalanceBars(FinanceDataStructure):
 
         # Serialize trade sequences before storing in state
         state.set("trade_sequences", [seq.to_dict() for seq in trade_sequences])
-
         if trade["side"] == "buy":
             cumulative_imbalance += 1
             buy_trades += 1
@@ -184,7 +202,7 @@ class TickImbalanceBars(FinanceDataStructure):
                     seq.to_dict() for seq in trade_sequences
                 ],  # Convert to list of dicts
             )
-
+            state.set("end_time", trade["timestamp"])
             bar.update(
                 {
                     "product_id": product_id,
@@ -222,8 +240,6 @@ class TickImbalanceBars(FinanceDataStructure):
             self.bars[product_id] = self.initialize_bar(None, None, None)
 
         else:
-            ticks_counter += 1
-            state.set("ticks_counter", ticks_counter)
             if ticks_counter == 1:
                 state.set("start_time", trade["timestamp"])
                 state.set("open", trade["price"])

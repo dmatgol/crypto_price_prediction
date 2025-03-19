@@ -1,5 +1,6 @@
-from finance_data_structures.tick_imbalance_bars import TickImbalanceBars
 from quixstreams import Application
+
+from finance_data_structures.tick_imbalance_bars import TickImbalanceBars
 from settings.config import settings
 
 
@@ -37,7 +38,6 @@ class Preprocessing:
 
         # Create a streaming dataframe to apply transformations to incoming data
         sdf = app.dataframe(input_topic)
-
         with app.get_producer() as producer:
             tick_imbalance_bars = TickImbalanceBars(
                 producer, output_topic, settings.product_ids

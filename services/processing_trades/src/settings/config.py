@@ -29,7 +29,7 @@ class KafkaSettings(BaseSettings):
     kafka_consumer_group: str
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_nested_delimiter="__"
+        env_file="services/processing_trades/.env", env_nested_delimiter="__"
     )
 
 
@@ -83,7 +83,7 @@ class Settings(BaseSettings):
     product_ids: list[ProductId]
 
     model_config = SettingsConfigDict(
-        yaml_file="src/configs/tick_imbalance_config.yaml",
+        yaml_file="services/processing_trades/src/configs/tick_imbalance_config.yaml",
     )
 
     @classmethod
