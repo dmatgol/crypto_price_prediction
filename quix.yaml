@@ -206,6 +206,71 @@ deployments:
         description: KAFKA consumer group to read tick imbalance candles
         required: true
         value: trade_to_tick_imbalance_ohlc_historical
+  - name: kafka_to_feature_store_historical
+    application: services/kafka_to_feature_store
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: INPUT_TOPIC
+        inputType: InputTopic
+        description: KAFKA topic with the tick imbalance candles
+        required: true
+        value: tick_imbalance_bars_historical
+      - name: CONSUMER_GROUP
+        inputType: FreeText
+        description: Consumer group to read tick imbalance candles
+        required: true
+        value: offline_tick_imbalance_ohlc_consumer_group
+      - name: FEATURE_GROUP
+        inputType: FreeText
+        description: Feature group name for the online feature store
+        required: true
+        value: offline_tick_imbalance_ohlc_feature_group
+      - name: FEATURE_GROUP_VERSION
+        inputType: FreeText
+        description: Feature group version for the online feature store
+        required: true
+        value: 1
+      - name: FEATURE_GROUP_PRIMARY_KEYS
+        inputType: FreeText
+        description: Online feature group primary key
+        required: true
+        value: '["product_id","start_time"]'
+      - name: LIVE_OR_HISTORICAL
+        inputType: FreeText
+        description: Whether to load the data to online or offline feature store
+        required: true
+        value: historical
+      - name: PROJECT_NAME
+        inputType: Secret
+        description: Hopsworks project name
+        required: true
+        secretKey: PROJECT_NAME
+      - name: API_KEY
+        inputType: Secret
+        description: Hopsworks API KEY
+        required: true
+        secretKey: API_KEY
+      - name: SAVE_EVERY_N_SEC
+        inputType: FreeText
+        description: Save buffer to online feature store every N seconds
+        value: 120
+      - name: CREATE_NEW_CONSUMER_GROUP
+        inputType: FreeText
+        description: 'Whether or not to create a new consumer group to read the data from kafka '
+        value: True
+      - name: FEATURE_GROUP_EVENT_TIME
+        inputType: FreeText
+        description: Feature group even time column
+        value: start_time
+      - name: BUFFER_SIZE
+        inputType: FreeText
+        description: Buffer size to send data to feature store
+        value: 40000
 
 # This section describes the Topics of the data pipeline
 topics:
