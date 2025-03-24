@@ -185,7 +185,7 @@ deployments:
   - name: trade_to_tick_imbalance_ohlc
     application: services/processing_trades
     version: latest
-    deploymentType: Service
+    deploymentType: Job
     resources:
       cpu: 200
       memory: 500
