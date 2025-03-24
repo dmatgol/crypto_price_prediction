@@ -182,6 +182,30 @@ deployments:
         inputType: FreeText
         description: Fetch historical trades since last_n_days
         value: 90
+  - name: trade_to_tick_imbalance_ohlc
+    application: services/processing_trades
+    version: latest
+    deploymentType: Service
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: KAFKA_INPUT_TOPIC
+        inputType: InputTopic
+        description: Kafka input topic to read the raw trade data from.
+        required: true
+        value: trades_historical
+      - name: KAFKA_OUTPUT_TOPIC
+        inputType: OutputTopic
+        description: Output topic with tick imbalance ohlc candles
+        required: true
+        value: tick_imbalance_bars_historical
+      - name: KAFKA_CONSUMER_GROUP
+        inputType: FreeText
+        description: KAFKA consumer group to read tick imbalance candles
+        required: true
+        value: trade_to_tick_imbalance_ohlc_historical
 
 # This section describes the Topics of the data pipeline
 topics:
