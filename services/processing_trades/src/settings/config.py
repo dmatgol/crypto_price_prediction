@@ -29,7 +29,7 @@ class KafkaSettings(BaseSettings):
     kafka_consumer_group: str
 
     model_config = SettingsConfigDict(
-        env_file="services/processing_trades/.env", env_nested_delimiter="__"
+        env_file=".env", env_nested_delimiter="__"
     )
 
 
