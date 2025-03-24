@@ -45,6 +45,10 @@ variables:
     inputType: FreeText
     description: Save buffer to online feature store every N seconds
     defaultValue: 600
+  - name: CREATE_NEW_CONSUMER_GROUP
+    inputType: FreeText
+    description: 'Whether or not to create a new consumer group to read the data from kafka '
+    defaultValue: True
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
