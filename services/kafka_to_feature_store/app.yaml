@@ -49,6 +49,10 @@ variables:
     inputType: FreeText
     description: 'Whether or not to create a new consumer group to read the data from kafka '
     defaultValue: True
+  - name: FEATURE_GROUP_EVENT_TIME
+    inputType: FreeText
+    description: Feature group even time column
+    defaultValue: start_time
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
