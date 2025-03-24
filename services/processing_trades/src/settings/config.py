@@ -83,7 +83,7 @@ class Settings(BaseSettings):
     product_ids: list[ProductId]
 
     model_config = SettingsConfigDict(
-        yaml_file="services/processing_trades/src/configs/tick_imbalance_config.yaml",
+        yaml_file="src/configs/tick_imbalance_config.yaml",
     )
 
     @classmethod
