@@ -92,7 +92,7 @@ class PublishToFeatureStore:
                 sec_since_last_saved = (
                     get_current_utc_sec() - last_saved_to_feature_store_ts
                 )
-
+                logger.info(f"Seconds since last saved: {sec_since_last_saved}")
                 if msg is None:
                     # If no message is received/ all messages are received
                     # then save the remaining buffer
@@ -120,6 +120,7 @@ class PublishToFeatureStore:
                     if not buffer and (
                         sec_since_last_saved >= self.save_every_n_sec
                     ):
+                        logger.info(f"Seconds_since_last_saved: {sec_since_last_saved}")
                         logger.info("No messages received. Exiting.")
                         return
                 else:
