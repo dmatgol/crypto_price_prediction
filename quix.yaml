@@ -209,7 +209,7 @@ deployments:
   - name: kafka_to_feature_store_historical
     application: services/kafka_to_feature_store
     version: latest
-    deploymentType: Service
+    deploymentType: Job
     resources:
       cpu: 200
       memory: 500
