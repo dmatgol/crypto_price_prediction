@@ -177,7 +177,7 @@ deployments:
         inputType: FreeText
         description: Whether we connect to Kraken Websocket for live data or Kraken API for historical data
         required: true
-        value: live
+        value: historical
       - name: LAST_N_DAYS
         inputType: FreeText
         description: Fetch historical trades since last_n_days
