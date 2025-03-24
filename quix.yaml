@@ -159,6 +159,29 @@ deployments:
         description: Environment (prod, dev, stag) to download the model from
         required: true
         value: production
+  - name: trade_producer_historical
+    application: services/trade_producer
+    version: latest
+    deploymentType: Job
+    resources:
+      cpu: 200
+      memory: 500
+      replicas: 1
+    variables:
+      - name: KAFKA_TOPIC
+        inputType: OutputTopic
+        description: The kafka topic that will save the trade data
+        required: true
+        value: trades_historical
+      - name: LIVE_OR_HISTORICAL
+        inputType: FreeText
+        description: Whether we connect to Kraken Websocket for live data or Kraken API for historical data
+        required: true
+        value: live
+      - name: LAST_N_DAYS
+        inputType: FreeText
+        description: Fetch historical trades since last_n_days
+        value: 90
 
 # This section describes the Topics of the data pipeline
 topics:
