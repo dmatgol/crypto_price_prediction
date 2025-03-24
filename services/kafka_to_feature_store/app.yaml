@@ -53,6 +53,10 @@ variables:
     inputType: FreeText
     description: Feature group even time column
     defaultValue: start_time
+  - name: BUFFER_SIZE
+    inputType: FreeText
+    description: Buffer size to send data to feature store
+    defaultValue: 40000
 dockerfile: Dockerfile
 runEntryPoint: src/main.py
 defaultFile: src/main.py
