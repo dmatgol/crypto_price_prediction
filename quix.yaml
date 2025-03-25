@@ -277,4 +277,3 @@ topics:
   - name: trade
   - name: tick_imbalance_bars_live
   - name: trades_historical
-  - name: tick_imbalance_bars_historical
