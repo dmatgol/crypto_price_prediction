@@ -281,3 +281,4 @@ topics:
       retentionInMinutes: 2880
       retentionInBytes: 52428800
   - name: tick_imbalance_bars_live
+  - name: trades_historical
