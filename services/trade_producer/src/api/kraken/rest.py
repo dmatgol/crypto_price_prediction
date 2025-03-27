@@ -94,6 +94,7 @@ class KrakenRestAPI(BaseExchangeRestAPI):
             try:
                 self.last_trade_id = trades["result"]["last"]
             except KeyError:
+                logger.info(trades)
                 logger.error(f"KeyError for {self.product_id}")
                 logger.error(trades)
                 raise KeyError(f"KeyError for {self.product_id}")
