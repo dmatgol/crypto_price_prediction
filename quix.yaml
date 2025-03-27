@@ -185,7 +185,7 @@ deployments:
       - name: LAST_N_DAYS
         inputType: FreeText
         description: Fetch historical trades since last_n_days
-        value: 120
+        value: 122
   - name: trade_to_tick_imbalance_ohlc
     application: services/processing_trades
     version: latest
