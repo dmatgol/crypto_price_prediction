@@ -25,6 +25,10 @@ deployments:
         description: Whether we connect to Kraken Websocket for live data or Kraken API for historical data
         required: true
         value: live
+      - name: LAST_N_DAYS
+        inputType: FreeText
+        description: Fetch historical trades since last_n_days
+        value: 90
   - name: processing_trades
     application: services/processing_trades
     version: latest
