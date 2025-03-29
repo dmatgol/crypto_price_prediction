@@ -276,3 +276,6 @@ deployments:
         description: Buffer size to send data to feature store
         value: 40000
 
+# This section describes the Topics of the data pipeline
+topics:
+  - name: trade
