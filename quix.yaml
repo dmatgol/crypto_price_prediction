@@ -280,3 +280,4 @@ deployments:
 topics:
   - name: trade
   - name: trades_historical
+  - name: tick_imbalance_bars_historical
